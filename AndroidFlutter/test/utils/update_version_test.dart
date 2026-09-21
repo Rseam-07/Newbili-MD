@@ -59,4 +59,37 @@ void main() {
       isNull,
     );
   });
+  test(
+    'iOS updates use IPA build metadata and ignore Android-only releases',
+    () {
+      final android = {
+        'tag_name': 'v9.0.0',
+        'assets': [
+          {'name': 'Newbili-MD-9.0.0-99-arm64-v8a.apk'},
+        ],
+      };
+      final preview = {
+        'tag_name': 'v1.1.0-ios-preview.2',
+        'assets': [
+          {'name': 'Newbili-MD-1.1.0-18-iOS-unsigned.ipa'},
+        ],
+      };
+      expect(findNewerRelease([android], '1.1.0+17', ios: true), isNull);
+      expect(
+        findNewerRelease([android, preview], '1.1.0+17', ios: true),
+        same(preview),
+      );
+      expect(findNewerRelease([preview], '1.1.0+18', ios: true), isNull);
+      expect(
+        findNewerRelease(
+          [
+            {...preview, 'draft': true},
+          ],
+          '1.1.0+17',
+          ios: true,
+        ),
+        isNull,
+      );
+    },
+  );
 }

@@ -1,0 +1,75 @@
+{
+  "release": "v1.1.0-ios-preview.1",
+  "bundleId": "com.rseam07.newbili.md",
+  "minimumIOS": "15.0",
+  "signing": "unsigned; requires a matching provisioning profile and certificate",
+  "environment": {
+    "runtime": "iOS/iPadOS 26.5",
+    "xcode": "27.0 beta (27A5228h)",
+    "flutter": "3.47.2"
+  },
+  "targetedUnitTestsPassed": 10,
+  "targetedAnalyzer": {
+    "errors": 0,
+    "warnings": 0,
+    "infos": 0
+  },
+  "simulatorFlows": {
+    "iphone": {
+      "keychain": "stable 256-bit key; encrypted Hive opened",
+      "deviceSize": "Size(402.0, 874.0)",
+      "onboarding": 1,
+      "recommendations": "real API cards loaded",
+      "search": "submitted search and opened result page",
+      "video": {
+        "bvid": "BV1L9bn6ZEHw",
+        "positionMs": 1400,
+        "durationMs": 1153010
+      },
+      "pauseResume": "passed",
+      "nativeUpdates": "mark, concurrent check, unmark, replacement check passed",
+      "frameworkErrors": [],
+      "passed": true,
+      "completedAt": "2026-09-21T17:29:50.923294Z"
+    },
+    "ipad": {
+      "keychain": "stable 256-bit key; encrypted Hive opened",
+      "deviceSize": "Size(1210.0, 834.0)",
+      "onboarding": 1,
+      "recommendations": "real API cards loaded",
+      "search": "submitted search and opened result page",
+      "video": {
+        "bvid": "BV1Nqb36UE7E",
+        "positionMs": 1300,
+        "durationMs": 605504
+      },
+      "tabletPanel": "opened comments and collapsed without restarting player",
+      "pauseResume": "passed",
+      "nativeUpdates": "mark, concurrent check, unmark, replacement check passed",
+      "frameworkErrors": [],
+      "passed": true,
+      "completedAt": "2026-09-21T17:31:51.256141Z"
+    },
+    "edge": {
+      "keychain": "stable 256-bit key; encrypted Hive opened",
+      "deviceSize": "Size(402.0, 874.0)",
+      "onboarding": 1,
+      "edgeBack": "interactive drag began and returned to home",
+      "frameworkErrors": [],
+      "passed": true,
+      "completedAt": "2026-09-21T17:35:21.461033Z"
+    }
+  },
+  "nativeXCTest": {
+    "case": "RunnerUITests.testLandscapeLaunch",
+    "passed": true,
+    "durationSeconds": 26.913
+  },
+  "remaining": [
+    "Device signing and physical-device verification",
+    "Authenticated actions and account renewal",
+    "System picture in picture",
+    "Long playback, audio interruptions, background scheduling, downloads and casting",
+    "Real split-window/external-display/foldable performance"
+  ]
+}

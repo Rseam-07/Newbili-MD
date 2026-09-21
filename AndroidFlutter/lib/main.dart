@@ -95,7 +95,7 @@ Future<void> _initAppPath() async {
   appSupportDirPath = (await getApplicationSupportDirectory()).path;
 }
 
-void main() async {
+Future<void> main() async {
   ScaledWidgetsFlutterBinding.ensureInitialized();
   MediaKit.ensureInitialized();
   await _initAppPath();
@@ -177,8 +177,9 @@ void main() async {
 
   Request();
   Request.setCookie();
-  if (Platform.isAndroid || Platform.isIOS)
+  if (Platform.isAndroid || Platform.isIOS) {
     Get.put(UpdateNotificationService());
+  }
   RequestUtils.syncHistoryStatus();
 
   SmartDialog.config.toast = SmartConfigToast(displayType: .onlyRefresh);
@@ -330,7 +331,9 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       onInit: () => Get.addPages(Routes.getPages),
       onGenerateRoute: Routes.generate,
-      defaultTransition: Transition.sharedAxis,
+      defaultTransition: Platform.isIOS
+          ? Transition.native
+          : Transition.sharedAxis,
       builder: FlutterSmartDialog.init(
         toastBuilder: CustomToast.new,
         loadingBuilder: LoadingWidget.new,
@@ -351,6 +354,19 @@ class MyApp extends StatelessWidget {
 
   static Widget _builder(BuildContext context, Widget? child) {
     child = NewbiliAccessibility(child: child!);
+    final dark = Theme.of(context).brightness == Brightness.dark;
+    child = AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarBrightness: dark ? Brightness.dark : Brightness.light,
+        statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: dark
+            ? Brightness.light
+            : Brightness.dark,
+      ),
+      child: child,
+    );
     final uiScale = Pref.uiScale;
     final mediaQuery = MediaQuery.of(context);
     final textScaler = TextScaler.linear(

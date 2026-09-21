@@ -38,6 +38,7 @@ abstract final class Update {
         res.data as List,
         '${BuildConfig.versionName}+${BuildConfig.versionCode}',
         android: Platform.isAndroid,
+        ios: Platform.isIOS,
       );
       if (data == null) {
         if (!isAuto) {
@@ -105,7 +106,9 @@ abstract final class Update {
                   downloadBtn('rpm', ext: 'rpm'),
                   downloadBtn('deb', ext: 'deb'),
                   downloadBtn('targz', ext: 'tar.gz'),
-                ] else
+                ] else if (Platform.isIOS)
+                  downloadBtn('查看 iOS 安装说明')
+                else
                   downloadBtn('Github'),
               ],
             );
@@ -121,6 +124,14 @@ abstract final class Update {
   // 下载适用于当前系统的安装包
   static Future<void> onDownload(Map data, {String? ext}) async {
     SmartDialog.dismiss();
+    if (Platform.isIOS) {
+      // An IPA needs valid device signing; opening its release page preserves
+      // the installation instructions and avoids offering an Android package.
+      await PageUtils.launchURL(
+        data['html_url'] as String? ?? '${Constants.sourceCodeUrl}/releases',
+      );
+      return;
+    }
     try {
       void download(String plat) {
         if (data['assets'].isNotEmpty) {
@@ -173,20 +184,25 @@ bool isNewerReleaseVersion(String candidate, String current) {
 
 /// Date-based preview tags are not app versions. Android releases advertise
 /// their actual version and build in the APK asset name produced by packaging.
-Map? findNewerRelease(List releases, String current, {bool android = false}) {
+Map? findNewerRelease(
+  List releases,
+  String current, {
+  bool android = false,
+  bool ios = false,
+}) {
   Map? newest;
   var newestVersion = current;
   for (final release in releases.whereType<Map>()) {
     if (release['draft'] == true) continue;
     var version = '${release['tag_name'] ?? ''}';
-    if (android) {
+    if (android || ios) {
       final assets = (release['assets'] as List?)?.whereType<Map>();
       if (assets == null) continue;
-      var hasApk = false;
+      var hasPackage = false;
       for (final asset in assets) {
         final name = '${asset['name'] ?? ''}';
-        if (!name.endsWith('.apk')) continue;
-        hasApk = true;
+        if (!name.endsWith(android ? '.apk' : '.ipa')) continue;
+        hasPackage = true;
         final match = RegExp(r'^Newbili-(?:Android|MD)-(\d+\.\d+\.\d+)-(\d+)-')
             .firstMatch(name);
         if (match != null) {
@@ -194,7 +210,7 @@ Map? findNewerRelease(List releases, String current, {bool android = false}) {
           break;
         }
       }
-      if (!hasApk) continue;
+      if (!hasPackage) continue;
     }
     if (isNewerReleaseVersion(version, newestVersion)) {
       newest = release;

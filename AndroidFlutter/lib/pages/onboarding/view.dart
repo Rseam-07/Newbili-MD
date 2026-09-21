@@ -4,7 +4,7 @@ import 'package:PiliPlus/common/theme/newbili_theme.dart';
 import 'package:PiliPlus/pages/main/view.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 typedef OnboardingVersionReader = int Function();

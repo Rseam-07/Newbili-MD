@@ -12,7 +12,7 @@
 - 按当前窗口与铰链布局播放页；支持左右分区及半折上下分区，保持播放器实例。
 - 取消网络请求后停止重试，处理导航项删除越界和控制器销毁，存储初始化失败显示恢复指引而非直接退出。
 - 官网默认跟随系统外观，支持手动深浅色切换，提供独立下载与更新日志页。
-- iOS / iPadOS 迁移暂缓，优先完善 Android 与官网。已有探索记录保留在 [iOS 迁移说明](docs/IOS_MIGRATION.md)。
+- iOS / iPadOS 迁移已恢复，复用 MD 页面与原生播放插件，提供需自行签名的 IPA 预览。验收记录与待完成项见 [iOS 迁移说明](docs/IOS_MIGRATION.md)。
 
 ## 目录
 
@@ -33,7 +33,7 @@ cd AndroidFlutter
 flutter run
 ```
 
-iOS 入口为暂缓的探索工程，当前 CI 只检查并构建 Android。
+iOS 构建使用 `Scripts/build-md-ios.sh`，独立 CI 为 `.github/workflows/md-ios.yml`；详细命令和安装条件见 [iOS 迁移说明](docs/IOS_MIGRATION.md)。
 
 Android 沿用 `com.rseam07.newbili` 包名以保留原 MD 预览版的数据；独立仓库并不要求清除账号或缓存。iOS MD 包名是 `com.rseam07.newbili.md`，可以和原生 Newbili 共存。
 

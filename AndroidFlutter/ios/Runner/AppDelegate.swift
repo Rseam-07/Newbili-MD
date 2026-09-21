@@ -122,6 +122,7 @@ private final class MDUpdateMonitor {
   private var store: [String: Any]
   private var generation = 0
   private var checkTask: Task<Void, Error>?
+  private var checkID: UUID?
   private let key = "newbili.md.updates.v1"
   init() {
     if let data = UserDefaults.standard.data(forKey: "newbili.md.updates.v1"),
@@ -157,6 +158,16 @@ private final class MDUpdateMonitor {
       let value = try JSONSerialization.jsonObject(with: data) as? [String: Any] else { throw MonitorError.invalid }
     return value
   }
+  private func invalidateCheck() {
+    generation += 1
+    checkTask?.cancel()
+    checkTask = nil
+    checkID = nil
+  }
+  private func requireCurrent(_ epoch: Int) throws {
+    try Task.checkCancellation()
+    guard epoch == generation else { throw CancellationError() }
+  }
   func invoke(_ method: String, _ args: [String: Any]) async throws -> String {
     var removed: [String: Any]?
     switch method {
@@ -168,7 +179,7 @@ private final class MDUpdateMonitor {
       let newMid = newLevel == "off" || cookie.isEmpty ? 0 : (args["mid"] as? NSNumber)?.int64Value ?? 0
       try MDKeychain.write("updateCookie", data: Data((newMid > 0 ? cookie : "").utf8))
       if newLevel != level || newMid != mid {
-        generation += 1; checkTask?.cancel()
+        invalidateCheck()
         store["baseline"] = false; store["seen"] = []
         if newMid != mid { store["recent"] = []; UNUserNotificationCenter.current().removeAllDeliveredNotifications() }
       }
@@ -177,14 +188,15 @@ private final class MDUpdateMonitor {
       let data = try decode(args[method == "mark" ? "video" : "snapshot"])
       let item = try snapshot(data, markedAt: method == "mark" ? now : (data["markedAt"] as? NSNumber)?.int64Value ?? now)
       if !tracks.contains(where: { ($0["bvid"] as? String) == (item["bvid"] as? String) }) {
-        generation += 1
+        invalidateCheck()
         store["tracks"] = ([item] + tracks).sorted { ($0["markedAt"] as? Int64 ?? 0) > ($1["markedAt"] as? Int64 ?? 0) }
         store["status"] = method == "mark" ? "已添加追更" : "已恢复追更"; store["lastChecked"] = 0; try save()
       }
     case "unmark":
       guard let bvid = args["bvid"] as? String, Self.validBvid(bvid) else { throw MonitorError.invalid }
       removed = tracks.first { $0["bvid"] as? String == bvid }
-      generation += 1; store["tracks"] = tracks.filter { $0["bvid"] as? String != bvid }
+      invalidateCheck()
+      store["tracks"] = tracks.filter { $0["bvid"] as? String != bvid }
       UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["series.\(bvid)"])
       try save()
     case "check": try await check(manual: args["manual"] as? Bool ?? false)
@@ -209,9 +221,12 @@ private final class MDUpdateMonitor {
   func check(manual: Bool) async throws {
     if let task = checkTask { try await task.value; return }
     if !manual && now - ((store["lastChecked"] as? NSNumber)?.int64Value ?? 0) < 300_000 { return }
+    let id = UUID()
     let task = Task { @MainActor in try await self.performCheck() }
     checkTask = task
-    defer { checkTask = nil }
+    checkID = id
+    // An obsolete check must not clear a replacement started after an edit.
+    defer { if checkID == id { checkTask = nil; checkID = nil } }
     try await withTaskCancellationHandler { try await task.value } onCancel: { task.cancel() }
   }
   private func api(_ path: String, cookie: String = "") async throws -> Any {
@@ -232,12 +247,12 @@ private final class MDUpdateMonitor {
     let epoch = generation, start = Date()
     var checked = 0, failed = 0
     for item in tracks.prefix(20) {
-      try Task.checkCancellation()
-      if epoch != generation || Date().timeIntervalSince(start) > 50 { return }
+      try requireCurrent(epoch)
+      if Date().timeIntervalSince(start) > 50 { break }
       do {
         guard let bvid = item["bvid"] as? String, Self.validBvid(bvid) else { throw MonitorError.invalid }
         guard let data = try await api("/x/web-interface/view?bvid=\(bvid)") as? [String: Any] else { throw MonitorError.invalid }
-        guard epoch == generation else { return }
+        try requireCurrent(epoch)
         var updated = try snapshot(data, markedAt: (item["markedAt"] as? NSNumber)?.int64Value ?? now, checkedAt: now)
         let known = Set(item["known"] as? [Int64] ?? [])
         let pages = updated["pages"] as? [[String: Any]] ?? []
@@ -246,7 +261,7 @@ private final class MDUpdateMonitor {
         store["tracks"] = tracks.map { $0["bvid"] as? String == bvid ? updated : $0 }; try save()
         if !known.isEmpty, let first = added.first {
           try await notify(id: "series.\(bvid)", title: "追更提醒 · \(updated["title"] as? String ?? bvid)",
-            body: "新增 \(added.count) 个分 P", bvid: bvid, page: first["page"] as? Int ?? 1)
+            body: "新增 \(added.count) 个分 P", bvid: bvid, page: first["page"] as? Int ?? 1, epoch: epoch)
         }
         checked += 1
       } catch is CancellationError { throw CancellationError() } catch { failed += 1 }
@@ -258,7 +273,9 @@ private final class MDUpdateMonitor {
         if level == "specialOnly" {
           allowed = []
           for page in 1...10 {
+            try requireCurrent(epoch)
             guard let list = try await api("/x/relation/tag?tagid=-10&pn=\(page)&ps=50", cookie: cookie) as? [[String: Any]] else { throw MonitorError.invalid }
+            try requireCurrent(epoch)
             allowed?.formUnion(list.compactMap { ($0["mid"] as? NSNumber)?.int64Value })
             if list.count < 50 { break }
             if page == 10 { throw MonitorError.invalid }
@@ -268,6 +285,7 @@ private final class MDUpdateMonitor {
         var seen = Set(store["seen"] as? [String] ?? [])
         var latest: [String] = []
         for item in feed["items"] as? [[String: Any]] ?? [] {
+          try requireCurrent(epoch)
           guard let id = item["id_str"] as? String, let modules = item["modules"] as? [String: Any],
             let author = modules["module_author"] as? [String: Any],
             let dynamic = modules["module_dynamic"] as? [String: Any], let major = dynamic["major"] as? [String: Any],
@@ -275,7 +293,7 @@ private final class MDUpdateMonitor {
           latest.append(id)
           let permitted = allowed == nil || allowed!.contains((author["mid"] as? NSNumber)?.int64Value ?? 0)
           if store["baseline"] as? Bool == true, !seen.contains(id), permitted {
-            try await notify(id: "up.\(id)", title: "\(author["name"] as? String ?? "关注的 UP") 更新了", body: archive["title"] as? String ?? "新投稿", bvid: bvid, page: 1)
+            try await notify(id: "up.\(id)", title: "\(author["name"] as? String ?? "关注的 UP") 更新了", body: archive["title"] as? String ?? "新投稿", bvid: bvid, page: 1, epoch: epoch)
           }
           seen.insert(id)
         }
@@ -284,12 +302,13 @@ private final class MDUpdateMonitor {
         store["baseline"] = true; checked += 1
       } catch is CancellationError { throw CancellationError() } catch { failed += 1 }
     }
-    guard epoch == generation else { return }
+    try requireCurrent(epoch)
     store["lastChecked"] = now
     store["status"] = failed == 0 ? "已检查 \(checked) 项，更新保留在最近更新中" : "已检查 \(checked) 项，\(failed) 项暂时失败，下次重试"
     try save()
   }
-  private func notify(id: String, title: String, body: String, bvid: String, page: Int) async throws {
+  private func notify(id: String, title: String, body: String, bvid: String, page: Int, epoch: Int) async throws {
+    try requireCurrent(epoch)
     let entry: [String: Any] = ["id": id, "title": title, "body": body, "bvid": bvid, "page": page, "time": now]
     let old = (store["recent"] as? [[String: Any]] ?? []).filter { $0["id"] as? String != id }
     store["recent"] = Array(([entry] + old).prefix(50)); try save()
@@ -297,6 +316,11 @@ private final class MDUpdateMonitor {
     content.sound = .default; content.userInfo = ["bvid": bvid, "page": page]
     // Permission denial must not discard the in-app update history.
     try? await UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: content, trigger: nil))
+    if epoch != generation || Task.isCancelled {
+      UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: [id])
+      UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [id])
+      throw CancellationError()
+    }
   }
   enum MonitorError: Error { case invalid, network }
 }

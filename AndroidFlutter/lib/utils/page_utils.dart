@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:io' show Platform;
 
 import 'package:PiliPlus/common/widgets/fractionally_sized_box.dart';
 import 'package:PiliPlus/common/widgets/image_viewer/gallery_viewer.dart';
@@ -202,6 +203,7 @@ abstract final class PageUtils {
     required bool isLive,
     required bool isPlaying,
   }) {
+    if (!Platform.isAndroid) return;
     if (width != null &&
         height != null &&
         !_fitsInAndroidRequirements(width, height)) {

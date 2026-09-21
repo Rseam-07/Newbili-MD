@@ -44,7 +44,7 @@ AndroidFlutter/android/.gradle/
 AndroidFlutter/android/local.properties
 AndroidFlutter/android/key.properties
 AndroidFlutter/android/**/build/
-AndroidFlutter/build/
+AndroidFlutter/build
 AndroidFlutter/dist/
 AndroidFlutter/*.jks
 *.aab
