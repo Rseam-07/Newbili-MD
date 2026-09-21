@@ -1,5 +1,5 @@
 name: PiliPlus
-description: A new Flutter project.
+description: Newbili MD — a Material Design Bilibili client for mobile and large screens.
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
@@ -17,7 +17,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
 # update when release
-version: 1.0.13+16
+version: 1.1.0+17
 
 environment:
   sdk: ">=3.13.0"
@@ -150,6 +150,7 @@ dependencies:
   re_highlight: ^0.0.3
   saver_gallery: ^5.0.2
   screen_brightness_platform_interface: ^2.1.0
+  screen_brightness_ios: ^2.1.4
   screen_retriever: ^0.2.0
   share_plus: ^13.1.0
   stream_transform: ^2.1.1

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:http2/http2.dart';
 
@@ -67,15 +69,7 @@ class RetryInterceptor extends Interceptor {
               err.error
                   is! TransportConnectionException // 网络中断, 此时请求可能已经被服务器所接收
                   ) {
-            Future.delayed(
-              Duration(
-                milliseconds: ++err.requestOptions.extra['_rt'] * _delay,
-              ),
-              () => _client
-                  .fetch(err.requestOptions)
-                  .then(handler.resolve)
-                  .onError<DioException>((error, _) => handler.reject(error)),
-            );
+            _retry(err, handler);
           } else {
             handler.next(err);
           }
@@ -83,6 +77,51 @@ class RetryInterceptor extends Interceptor {
         default:
           return handler.next(err);
       }
+    }
+  }
+
+  Future<void> _retry(
+    DioException original,
+    ErrorInterceptorHandler handler,
+  ) async {
+    final options = original.requestOptions;
+    final attempt = (options.extra['_rt'] as int? ?? 0) + 1;
+    final ready = Completer<void>();
+    final timer = Timer(Duration(milliseconds: attempt * _delay), () {
+      if (!ready.isCompleted) ready.complete();
+    });
+    try {
+      final cancel = options.cancelToken;
+      if (cancel != null) {
+        await Future.any<void>([
+          ready.future,
+          cancel.whenCancel.then((_) {}),
+        ]);
+        if (cancel.isCancelled) {
+          handler.reject(cancel.cancelError!);
+          return;
+        }
+      } else {
+        await ready.future;
+      }
+      final response = await _client.fetch<dynamic>(
+        options.copyWith(
+          extra: {...options.extra, '_rt': attempt},
+        ),
+      );
+      handler.resolve(response);
+    } on DioException catch (error) {
+      handler.reject(error);
+    } catch (error, stack) {
+      handler.reject(
+        DioException(
+          requestOptions: options,
+          error: error,
+          stackTrace: stack,
+        ),
+      );
+    } finally {
+      timer.cancel();
     }
   }
 

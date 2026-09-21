@@ -18,9 +18,10 @@ import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 class HomeController extends GetxController
-    with GetSingleTickerProviderStateMixin, ScrollOrRefreshMixin {
+    with GetTickerProviderStateMixin, ScrollOrRefreshMixin {
   late List<HomeTabType> tabs;
   late TabController tabController;
+  bool _hasTabController = false;
 
   RxBool? showTopBar;
   late final bool hideTopBar;
@@ -78,6 +79,8 @@ class HomeController extends GetxController
           .toList(),
     );
 
+    if (_hasTabController) tabController.dispose();
+    _hasTabController = true;
     tabController = TabController(
       initialIndex: max(0, this.tabs.indexOf(HomeTabType.rcmd)),
       length: this.tabs.length,
@@ -97,7 +100,7 @@ class HomeController extends GetxController
         Api.searchDefault,
         queryParameters: await WbiSign.makSign({'web_location': 333.1365}),
       );
-      if (res.data['code'] == 0) {
+      if (!isClosed && res.data['code'] == 0) {
         defaultSearch.value = res.data['data']?['name'] ?? '';
         // defaultSearch.value = res.data['data']?['show_name'] ?? '';
       }

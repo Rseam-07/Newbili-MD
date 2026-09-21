@@ -13,7 +13,10 @@ class NewbiliDestinationView extends StatefulWidget {
     this.baseIndex,
     this.paneTitle,
     this.onClosePane,
-  }) : assert(index >= 0 && index < children.length);
+  }) : assert(index >= 0 && index < children.length),
+       assert(
+         baseIndex == null || (baseIndex >= 0 && baseIndex < children.length),
+       );
 
   final int index;
   final List<Widget> children;
@@ -74,6 +77,10 @@ class _NewbiliDestinationViewState extends State<NewbiliDestinationView>
   @override
   void didUpdateWidget(NewbiliDestinationView oldWidget) {
     super.didUpdateWidget(oldWidget);
+    // Settings can shorten the navigation list while old pages are retained.
+    _visited.removeWhere((index) => index >= widget.children.length);
+    _from.removeWhere((index, _) => !_visited.contains(index));
+    _to.removeWhere((index, _) => !_visited.contains(index));
     _retainBase();
     if (NewbiliMotion.reduced(context)) {
       _paneController.value = _hasPane ? 1 : 0;
@@ -145,7 +152,11 @@ class _NewbiliDestinationViewState extends State<NewbiliDestinationView>
                 enabled: index == widget.index || index == widget.baseIndex,
                 child: TickerMode(
                   enabled: index == widget.index || index == widget.baseIndex,
-                  child: widget.children[index],
+                  child: ExcludeFocus(
+                    excluding:
+                        index != widget.index && index != widget.baseIndex,
+                    child: widget.children[index],
+                  ),
                 ),
               ),
               builder: (context, child) {
@@ -153,10 +164,12 @@ class _NewbiliDestinationViewState extends State<NewbiliDestinationView>
                 final isBase = index == widget.baseIndex;
                 final pane = widget.baseIndex != null && !isBase;
                 final active = index == widget.index || isBase;
-                final paneWidth = (constraints.maxWidth * .30).clamp(
-                  340.0,
-                  400.0,
-                );
+                final paneWidth = (constraints.maxWidth * .30)
+                    .clamp(
+                      340.0,
+                      400.0,
+                    )
+                    .clamp(0.0, constraints.maxWidth);
                 if (pane) {
                   final colors = ColorScheme.of(context);
                   child = Material(

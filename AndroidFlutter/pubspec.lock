@@ -1550,7 +1550,7 @@ packages:
     source: hosted
     version: "2.1.6"
   screen_brightness_ios:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: screen_brightness_ios
       sha256: "352d355e8523a186ba1e494b74218e5ca96e51975a0630b8ed89fbb7ff609762"

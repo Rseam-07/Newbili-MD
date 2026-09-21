@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:PiliPlus/common/theme/newbili_theme.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
@@ -27,7 +28,9 @@ class NewbiliPageRoute<T> extends GetPageRoute<T> {
 
   @override
   DelegatedTransitionBuilder? get delegatedTransition =>
-      const PredictiveBackPageTransitionsBuilder().delegatedTransition;
+      defaultTargetPlatform == TargetPlatform.android
+      ? const PredictiveBackPageTransitionsBuilder().delegatedTransition
+      : null;
 
   @override
   bool canTransitionTo(TransitionRoute<dynamic> nextRoute) =>

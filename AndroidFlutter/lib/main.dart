@@ -1,3 +1,7 @@
+import 'dart:ui' show DisplayFeature;
+
+import 'package:PiliPlus/common/theme/newbili_theme.dart';
+
 import 'dart:io';
 
 import 'package:PiliPlus/services/update_notification_service.dart';
@@ -33,7 +37,6 @@ import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/theme_utils.dart';
-import 'package:PiliPlus/utils/utils.dart';
 import 'package:catcher_2/catcher_2.dart';
 import 'package:collection/collection.dart';
 import 'package:dynamic_color/dynamic_color.dart' show DynamicColorPlugin;
@@ -99,9 +102,47 @@ void main() async {
   try {
     await GStorage.init();
   } catch (e) {
-    await Utils.copyText(e.toString());
     if (kDebugMode) debugPrint('GStorage init error: $e');
-    exit(0);
+    // Keep user data intact and present an actionable screen instead of quitting.
+    runApp(
+      MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(colorSchemeSeed: const Color(0xFFB93A70)),
+        home: Scaffold(
+          body: SafeArea(
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.lock_outline_rounded, size: 48),
+                    const SizedBox(height: 24),
+                    const Text('暂时无法打开本地数据', style: TextStyle(fontSize: 24)),
+                    const SizedBox(height: 16),
+                    const Text(
+                      '请先解锁设备并检查可用空间，然后完全关闭 App 再打开。已有账号和缓存未被清除。',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    TextButton(
+                      onPressed: () => Clipboard.setData(
+                        ClipboardData(
+                          text:
+                              'Newbili MD storage initialization: ${e.runtimeType}',
+                        ),
+                      ),
+                      child: const Text('复制诊断信息'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    return;
   }
   await LegacyAccountMigration.run();
   ScaledWidgetsFlutterBinding.instance.scaleFactor = Pref.uiScale;
@@ -136,7 +177,8 @@ void main() async {
 
   Request();
   Request.setCookie();
-  if (Platform.isAndroid) Get.put(UpdateNotificationService());
+  if (Platform.isAndroid || Platform.isIOS)
+    Get.put(UpdateNotificationService());
   RequestUtils.syncHistoryStatus();
 
   SmartDialog.config.toast = SmartConfigToast(displayType: .onlyRefresh);
@@ -308,6 +350,7 @@ class MyApp extends StatelessWidget {
   }
 
   static Widget _builder(BuildContext context, Widget? child) {
+    child = NewbiliAccessibility(child: child!);
     final uiScale = Pref.uiScale;
     final mediaQuery = MediaQuery.of(context);
     final textScaler = TextScaler.linear(
@@ -322,8 +365,21 @@ class MyApp extends StatelessWidget {
           viewInsets: mediaQuery.viewInsets / uiScale,
           viewPadding: tmpPadding ?? mediaQuery.viewPadding / uiScale,
           devicePixelRatio: mediaQuery.devicePixelRatio * uiScale,
+          displayFeatures: [
+            for (final feature in mediaQuery.displayFeatures)
+              DisplayFeature(
+                bounds: Rect.fromLTRB(
+                  feature.bounds.left / uiScale,
+                  feature.bounds.top / uiScale,
+                  feature.bounds.right / uiScale,
+                  feature.bounds.bottom / uiScale,
+                ),
+                type: feature.type,
+                state: feature.state,
+              ),
+          ],
         ),
-        child: child!,
+        child: child,
       );
     } else {
       child = MediaQuery(
@@ -332,7 +388,7 @@ class MyApp extends StatelessWidget {
           padding: tmpPadding,
           viewPadding: tmpPadding,
         ),
-        child: child!,
+        child: child,
       );
     }
     child = BackdropGroup(child: child);
@@ -401,7 +457,7 @@ class _CustomHttpOverrides extends HttpOverrides {
     // ..maxConnectionsPerHost = 32
     /// The default value is 15 seconds.
     //   ..idleTimeout = const Duration(seconds: 15);
-    if (kDebugMode || Pref.badCertificateCallback) {
+    if (Pref.badCertificateCallback) {
       client.badCertificateCallback = (cert, host, port) => true;
     }
     return client;

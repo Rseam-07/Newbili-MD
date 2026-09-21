@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/newbili_press_feedback.dart';
 import 'package:material_ui/material_ui.dart';
 
 Widget iconButton({
@@ -17,18 +18,21 @@ Widget iconButton({
     backgroundColor = colorScheme.secondaryContainer;
     foregroundColor = colorScheme.onSecondaryContainer;
   }
-  return SizedBox(
-    width: size,
-    height: size,
-    child: IconButton(
-      icon: icon,
-      tooltip: tooltip,
-      onPressed: onPressed,
-      style: IconButton.styleFrom(
-        padding: EdgeInsets.zero,
-        iconSize: iconSize ?? size / 2,
-        backgroundColor: backgroundColor,
-        foregroundColor: foregroundColor,
+  return NewbiliPressFeedback(
+    enabled: onPressed != null,
+    child: SizedBox(
+      width: size,
+      height: size,
+      child: IconButton(
+        icon: icon,
+        tooltip: tooltip,
+        onPressed: onPressed,
+        style: IconButton.styleFrom(
+          padding: EdgeInsets.zero,
+          iconSize: iconSize ?? size / 2,
+          backgroundColor: backgroundColor,
+          foregroundColor: foregroundColor,
+        ),
       ),
     ),
   );

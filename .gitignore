@@ -90,3 +90,18 @@ Packages/FFmpegKit/Sources/*.xcframework/
 
 # macOS
 .DS_Store
+
+# Independent MD app and official website
+!AndroidFlutter/ios/Runner/Assets.xcassets/**/*.png
+AndroidFlutter/ios/.symlinks/
+AndroidFlutter/ios/Flutter/Generated.xcconfig
+AndroidFlutter/ios/Flutter/flutter_export_environment.sh
+AndroidFlutter/ios/Flutter/ephemeral/
+Website/.wrangler/
+Website/node_modules/
+!Website/dist/
+!Website/dist/**
+
+AndroidFlutter/ios/Runner/GeneratedPluginRegistrant.*
+AndroidFlutter/ios/Flutter/*.framework/
+AndroidFlutter/ios/Flutter/*.podspec

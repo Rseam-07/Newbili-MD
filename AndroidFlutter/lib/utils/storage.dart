@@ -80,11 +80,11 @@ abstract final class GStorage {
   }
 
   static Future<HiveCipher?> _accountEncryptionCipher() async {
-    if (!Platform.isAndroid) return null;
+    if (!Platform.isAndroid && !Platform.isIOS) return null;
     const channel = MethodChannel('com.rseam07.newbili/legacy_account');
     final key = await channel.invokeMethod<Uint8List>('accountHiveKey');
     if (key == null || key.length != 32) {
-      throw StateError('Android account encryption key is unavailable');
+      throw StateError('Account encryption key is unavailable');
     }
     return HiveAesCipher(key);
   }

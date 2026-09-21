@@ -1,3 +1,6 @@
+import 'dart:ui' show DisplayFeature;
+
+import 'package:PiliPlus/common/layout/newbili_fold_layout.dart';
 import 'package:PiliPlus/pages/dynamics_tab/view.dart';
 import 'package:PiliPlus/models/common/dynamic/dynamics_type.dart';
 import 'package:PiliPlus/utils/recommendation_history.dart';
@@ -1294,7 +1297,12 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     Widget child;
     if (videoDetailController.plPlayerController.isPipMode) {
       child = plPlayer(width: maxWidth, height: maxHeight, isPipMode: true);
-    } else if (maxWidth >= 840 && maxHeight >= 600) {
+    } else if ((maxWidth >= 840 && maxHeight >= 600) ||
+        NewbiliFoldLayout.separatingFeature(
+              Size(maxWidth, maxHeight),
+              MediaQuery.of(context).displayFeatures,
+            ) !=
+            null) {
       child = childWhenTablet;
     } else if (!videoDetailController.horizontalScreen) {
       child = childWhenDisabled;
@@ -1340,30 +1348,49 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             ),
       body: Padding(
         padding: padding.copyWith(top: 0),
-        child: TabletPlayerStage(
-          sheetKey: videoDetailController.childKey,
-          selectedPane: _tabletPane,
-          initialOpen: _tabletPaneOpen,
-          onOpenChanged: (open) => _tabletPaneOpen = open,
-          onPaneChanged: (name) => setState(() => _tabletPane = name),
-          extraPane: DynamicsTabPage(
-            dynamicsType: DynamicsTabType.all,
-            controllerTag: 'playing-feed-$heroTag',
+        child: MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            displayFeatures: [
+              for (final feature in MediaQuery.of(context).displayFeatures)
+                DisplayFeature(
+                  bounds: feature.bounds.shift(
+                    Offset(
+                      -padding.left,
+                      removeAppBar(false) ? 0 : -padding.top,
+                    ),
+                  ),
+                  type: feature.type,
+                  state: feature.state,
+                ),
+            ],
           ),
-          playerBuilder: (width, height) =>
-              videoPlayer(width: width, height: height, heroRadius: 0),
-          details: LayoutBuilder(
-            builder: (context, constraints) => videoIntro(
-              width: constraints.maxWidth,
-              height: constraints.maxHeight,
-              isHorizontal: false,
-              needRelated: true,
-              needCtr: false,
+          child: TabletPlayerStage(
+            sheetKey: videoDetailController.childKey,
+            selectedPane: _tabletPane,
+            initialOpen: _tabletPaneOpen,
+            onOpenChanged: (open) => _tabletPaneOpen = open,
+            onPaneChanged: (name) => setState(() => _tabletPane = name),
+            extraPane: DynamicsTabPage(
+              dynamicsType: DynamicsTabType.all,
+              controllerTag: 'playing-feed-$heroTag',
             ),
+            playerBuilder: (width, height) =>
+                videoPlayer(width: width, height: height, heroRadius: 0),
+            details: LayoutBuilder(
+              builder: (context, constraints) => videoIntro(
+                width: constraints.maxWidth,
+                height: constraints.maxHeight,
+                isHorizontal: false,
+                needRelated: true,
+                needCtr: false,
+              ),
+            ),
+            secondary: videoDetailController.showReply
+                ? videoReplyPanel()
+                : null,
+            playlist: _shouldShowSeasonPanel ? seasonPanel : null,
+            onSendDanmaku: videoDetailController.showShootDanmakuSheet,
           ),
-          secondary: videoDetailController.showReply ? videoReplyPanel() : null,
-          playlist: _shouldShowSeasonPanel ? seasonPanel : null,
-          onSendDanmaku: videoDetailController.showShootDanmakuSheet,
         ),
       ),
     );

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:PiliPlus/http/retry_interceptor.dart';
@@ -65,6 +66,32 @@ void main() {
     expect(adapter.calls, 3);
   });
 
+  test(
+    'cancelling during retry backoff does not issue another request',
+    () async {
+      final adapter = _UnreliableAdapter(DioExceptionType.connectionError);
+      final dio = Dio()..httpClientAdapter = adapter;
+      addTearDown(() => dio.close(force: true));
+      dio.interceptors.add(RetryInterceptor(dio, 3, 1000));
+      final cancel = CancelToken();
+      final done = expectLater(
+        dio.get<void>('https://example.invalid/videos', cancelToken: cancel),
+        throwsA(
+          isA<DioException>().having(
+            (e) => e.type,
+            'type',
+            DioExceptionType.cancel,
+          ),
+        ),
+      );
+      await adapter.firstCall.future;
+      await Future<void>.delayed(const Duration(milliseconds: 20));
+      cancel.cancel('page disposed');
+      await done;
+      expect(adapter.calls, 1);
+    },
+  );
+
   test('optional danmaku IDs tolerate number, string and missing data', () {
     expect(DanmakuPost.fromJson({'dmid': 123}).dmid, 123);
     expect(DanmakuPost.fromJson({'dmid': '123'}).dmid, 123);
@@ -78,6 +105,7 @@ class _UnreliableAdapter implements HttpClientAdapter {
   final DioExceptionType type;
   final int? succeedAfter;
   int calls = 0;
+  final firstCall = Completer<void>();
 
   @override
   Future<ResponseBody> fetch(
@@ -86,6 +114,7 @@ class _UnreliableAdapter implements HttpClientAdapter {
     Future<void>? cancelFuture,
   ) async {
     calls++;
+    if (!firstCall.isCompleted) firstCall.complete();
     if (succeedAfter != null && calls > succeedAfter!) {
       return ResponseBody.fromString('ok', 200);
     }

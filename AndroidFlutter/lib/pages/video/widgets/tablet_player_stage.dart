@@ -1,5 +1,7 @@
 import 'dart:ui' show lerpDouble;
 
+import 'package:PiliPlus/common/layout/newbili_fold_layout.dart';
+
 import 'package:PiliPlus/common/theme/newbili_theme.dart';
 import 'package:PiliPlus/common/widgets/newbili_destination_view.dart';
 import 'package:PiliPlus/common/widgets/scaffold/mini_scaffold.dart';
@@ -110,19 +112,12 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
         color: colors.surface,
         child: LayoutBuilder(
           builder: (context, box) {
-            final paneExtent = box.maxWidth * .3;
-            final card = Rect.fromLTWH(
-              box.maxWidth - paneExtent + 12,
-              12,
-              paneExtent - 24,
-              box.maxHeight - 24,
+            final layout = NewbiliFoldLayout.resolve(
+              box.biggest,
+              MediaQuery.of(context).displayFeatures,
             );
-            final ball = Rect.fromLTWH(
-              box.maxWidth - 76,
-              box.maxHeight * .5 - 28,
-              56,
-              56,
-            );
+            final card = layout.content;
+            final ball = layout.ball;
             return AnimatedBuilder(
               animation: _expansion,
               builder: (context, _) {
@@ -131,19 +126,22 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
                 final contentOpacity = ((t - .25) / .75).clamp(0.0, 1.0);
                 return Stack(
                   children: [
-                    Positioned(
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      right: paneExtent * t,
+                    Positioned.fromRect(
+                      // A single player element survives animation and folding.
+                      rect: Rect.lerp(
+                        layout.folded
+                            ? layout.player
+                            : Offset.zero & box.biggest,
+                        layout.player,
+                        t,
+                      )!,
                       child: ColoredBox(
                         color: Colors.black,
                         child: LayoutBuilder(
-                          builder: (context, playerBox) =>
-                              widget.playerBuilder(
-                                playerBox.maxWidth,
-                                playerBox.maxHeight,
-                              ),
+                          builder: (context, playerBox) => widget.playerBuilder(
+                            playerBox.maxWidth,
+                            playerBox.maxHeight,
+                          ),
                         ),
                       ),
                     ),
@@ -179,13 +177,11 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
                                       minHeight: card.height,
                                       maxHeight: card.height,
                                       child: MediaQuery(
-                                        data: MediaQuery.of(context)
-                                            .copyWith(
-                                              size: card.size,
-                                              padding: EdgeInsets.zero,
-                                              viewPadding:
-                                                  EdgeInsets.zero,
-                                            ),
+                                        data: MediaQuery.of(context).copyWith(
+                                          size: card.size,
+                                          padding: EdgeInsets.zero,
+                                          viewPadding: EdgeInsets.zero,
+                                        ),
                                         child: ExcludeFocus(
                                           excluding: !_open,
                                           child: TickerMode(
@@ -222,8 +218,7 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
                                         child: Icon(
                                           Icons.forum_outlined,
                                           size: 26,
-                                          color:
-                                              colors.onSecondaryContainer,
+                                          color: colors.onSecondaryContainer,
                                         ),
                                       ),
                                     ),

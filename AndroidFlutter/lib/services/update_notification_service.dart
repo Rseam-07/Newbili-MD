@@ -1,3 +1,7 @@
+import 'dart:io';
+
+import 'package:PiliPlus/utils/app_scheme.dart';
+
 import 'dart:async';
 import 'dart:convert';
 
@@ -33,6 +37,31 @@ class UpdateNotificationService extends GetxService
       (_) => syncAccount(),
     );
     refresh();
+    if (Platform.isIOS) {
+      _channel.setMethodCallHandler((call) async {
+        if (call.method == 'openVideo') await _openNotification();
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) => _openNotification());
+    }
+  }
+
+  Future<void> _openNotification() async {
+    if (isClosed) return;
+    try {
+      final value = await _channel.invokeMapMethod<String, dynamic>(
+        'consumeOpenVideo',
+      );
+      final bvid = value?['bvid'] as String?;
+      if (bvid == null ||
+          !RegExp(r'^BV[0-9A-Za-z]{10}$').hasMatch(bvid) ||
+          isClosed)
+        return;
+      await PiliScheme.routePushFromUrl(
+        'https://www.bilibili.com/video/$bvid?p=${value?['page'] ?? 1}',
+      );
+    } catch (_) {
+      /* A launch may precede navigator initialization; refresh remains available. */
+    }
   }
 
   Future<Map<String, dynamic>> _invoke(
@@ -41,6 +70,7 @@ class UpdateNotificationService extends GetxService
   ]) async {
     final json = await _channel.invokeMethod<String>(method, arguments);
     final result = jsonDecode(json!) as Map<String, dynamic>;
+    if (isClosed) return result;
     final revision = result['revision'] as int?;
     // Native checks and edits can finish in a different order from their replies.
     if (revision == null || revision >= _stateRevision) {
@@ -56,6 +86,7 @@ class UpdateNotificationService extends GetxService
   Future<void> syncAccount([UploaderNotificationLevel? level]) {
     return _configuration = _configuration
         .then((_) async {
+          if (isClosed) return;
           if (!loaded.value) await _invoke('state');
           final selected = level ?? state.value.level;
           late final account = Accounts.main;
@@ -77,7 +108,7 @@ class UpdateNotificationService extends GetxService
           });
         })
         .catchError((Object _) {
-          error.value = '无法同步通知设置，请重试';
+          if (!isClosed) error.value = '无法同步通知设置，请重试';
         });
   }
 
@@ -168,6 +199,7 @@ class UpdateNotificationService extends GetxService
   void onClose() {
     WidgetsBinding.instance.removeObserver(this);
     _accountListener?.cancel();
+    if (Platform.isIOS) _channel.setMethodCallHandler(null);
     super.onClose();
   }
 }

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/newbili_press_feedback.dart';
 import 'package:PiliPlus/common/theme/newbili_theme.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -87,10 +88,32 @@ class NewbiliNavigationBar extends StatelessWidget {
                                                   : colors.onSurfaceVariant,
                                             ),
                                           ),
-                                          child: i == selectedIndex
-                                              ? destinations[i].selectedIcon ??
-                                                    destinations[i].icon
-                                              : destinations[i].icon,
+                                          child: NewbiliPressFeedback(
+                                            child: AnimatedScale(
+                                              scale: i == selectedIndex
+                                                  ? 1.08
+                                                  : 1,
+                                              duration: duration,
+                                              curve: Curves.easeOutCubic,
+                                              child: AnimatedSwitcher(
+                                                duration:
+                                                    NewbiliMotion.duration(
+                                                      context,
+                                                      NewbiliMotion.feedback,
+                                                    ),
+                                                child: KeyedSubtree(
+                                                  key: ValueKey(
+                                                    i == selectedIndex,
+                                                  ),
+                                                  child: i == selectedIndex
+                                                      ? destinations[i]
+                                                                .selectedIcon ??
+                                                            destinations[i].icon
+                                                      : destinations[i].icon,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
                                         ),
                                         const SizedBox(height: 4),
                                         AnimatedDefaultTextStyle(

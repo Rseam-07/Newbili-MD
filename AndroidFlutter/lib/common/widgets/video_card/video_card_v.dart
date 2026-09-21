@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/newbili_press_feedback.dart';
 import 'package:PiliPlus/common/widgets/newbili_cover_hero.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
@@ -103,83 +104,88 @@ class VideoCardV extends StatelessWidget {
       cover: videoItem.cover,
       bvid: videoItem.bvid,
     );
-    return NewbiliCoverSource(
-      builder: (context, coverTag) => Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          onTap: () => onOpen != null
-              ? onOpen!(coverTag)
-              : onPushDetail(coverHeroTag: coverTag, context: context),
-          onLongPress: onLongPress,
-          onSecondaryTap: PlatformUtils.isMobile ? null : onLongPress,
-          borderRadius: BorderRadius.circular(8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AspectRatio(
-                aspectRatio: Style.aspectRatio,
-                child: LayoutBuilder(
-                  builder: (context, constraints) => Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      NewbiliCoverHero(
-                        tag: coverTag,
-                        radius: 8,
-                        child:
-                            coverBuilder?.call(context) ??
-                            NetworkImgLayer(
-                              src: videoItem.cover,
-                              width: constraints.maxWidth,
-                              height: constraints.maxHeight,
-                              borderRadius: BorderRadius.zero,
-                            ),
-                      ),
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              gradient: const LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [Colors.transparent, Color(0x99000000)],
-                                stops: [.55, 1],
+    return NewbiliPressFeedback(
+      child: NewbiliCoverSource(
+        builder: (context, coverTag) => Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            onTap: () => onOpen != null
+                ? onOpen!(coverTag)
+                : onPushDetail(coverHeroTag: coverTag, context: context),
+            onLongPress: onLongPress,
+            onSecondaryTap: PlatformUtils.isMobile ? null : onLongPress,
+            borderRadius: BorderRadius.circular(8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AspectRatio(
+                  aspectRatio: Style.aspectRatio,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        NewbiliCoverHero(
+                          tag: coverTag,
+                          radius: 8,
+                          child:
+                              coverBuilder?.call(context) ??
+                              NetworkImgLayer(
+                                src: videoItem.cover,
+                                width: constraints.maxWidth,
+                                height: constraints.maxHeight,
+                                borderRadius: BorderRadius.zero,
+                              ),
+                        ),
+                        Positioned.fill(
+                          child: IgnorePointer(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                gradient: const LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    Color(0x99000000),
+                                  ],
+                                  stops: [.55, 1],
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ),
-                      Positioned(
-                        left: 8,
-                        right: 60,
-                        bottom: 7,
-                        child: Text(
-                          '${NumUtils.numFormat(videoItem.stat.view)} 播放',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            height: 1.2,
-                            color: Colors.white,
+                        Positioned(
+                          left: 8,
+                          right: 60,
+                          bottom: 7,
+                          child: Text(
+                            '${NumUtils.numFormat(videoItem.stat.view)} 播放',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              height: 1.2,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
-                      ),
-                      if (videoItem.duration > 0)
-                        PBadge(
-                          bottom: 6,
-                          right: 7,
-                          size: .small,
-                          type: .gray,
-                          text: DurationUtils.formatDuration(
-                            videoItem.duration,
+                        if (videoItem.duration > 0)
+                          PBadge(
+                            bottom: 6,
+                            right: 7,
+                            size: .small,
+                            type: .gray,
+                            text: DurationUtils.formatDuration(
+                              videoItem.duration,
+                            ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              content(context),
-            ],
+                content(context),
+              ],
+            ),
           ),
         ),
       ),
