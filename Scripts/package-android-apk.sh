@@ -44,7 +44,8 @@ for abi in armeabi-v7a arm64-v8a x86_64; do
   if [[ "$badging" != *"package: name='com.rseam07.newbili'"* ||
         "$badging" != *"versionCode='$version_code'"* ||
         "$badging" != *"versionName='$version_name'"* ||
-        "$badging" != *"minSdkVersion:'31'"* ||
+        ( "$badging" != *"minSdkVersion:'31'"* &&
+          "$badging" != *"sdkVersion:'31'"* ) ||
         "$badging" != *"native-code: '$abi'"* ]]; then
     echo "APK identity, version, minimum SDK or ABI does not match this release." >&2
     exit 1

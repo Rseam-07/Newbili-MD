@@ -20,3 +20,5 @@ Cloudflare 发布：在 Website 中执行 `npx wrangler deploy`。使用当前�
 发布流程：先用 `Scripts/package-android-apk.sh` 验证并签名安装包；再执行 `python3 Scripts/update-website-release.py --date YYYY-MM-DD`。脚本从实际文件生成版本、大小、SHA-256、静态下载页与 `releases.json`，任一文件缺失会停止。`--pending` 仅用于本地设计预览，不得作为正式下载页发布。
 
 同步 `Website/dist/` 到 Pages 镜像仓库（保留其 `.git` 和 `downloads/files`），把对应 APK 与校验清单放入 `downloads/files/` 后提交。页面更新不应触发 Android 构建。Cloudflare 在 Website 目录用当前账户执行 `wrangler deploy`。
+
+新版本发布前，在 `downloads.template.html` 维护本次变更并将上一版条目保留在历史区，然后生成元数据与下载页。

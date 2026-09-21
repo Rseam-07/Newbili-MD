@@ -1,0 +1,34 @@
+{
+  "version": "1.1.0",
+  "build": 17,
+  "date": "2026-09-22",
+  "channel": "preview",
+  "minAndroid": "12",
+  "ready": true,
+  "assets": [
+    {
+      "abi": "arm64-v8a",
+      "name": "Newbili-MD-1.1.0-17-arm64-v8a.apk",
+      "bytes": 25601260,
+      "sha256": "37489482638cf6877fa4829aec068e6c94f8e8151c708b60f155322c19f4a162",
+      "url": "https://rseam-07.github.io/downloads/files/Newbili-MD-1.1.0-17-arm64-v8a.apk",
+      "githubUrl": "https://github.com/Rseam-07/Newbili-MD/releases/download/v1.1.0/Newbili-MD-1.1.0-17-arm64-v8a.apk"
+    },
+    {
+      "abi": "armeabi-v7a",
+      "name": "Newbili-MD-1.1.0-17-armeabi-v7a.apk",
+      "bytes": 25502970,
+      "sha256": "6a6482a08a218d306e2f6268241612e0ef58c453c6fd55909b46a3c84e87002a",
+      "url": "https://rseam-07.github.io/downloads/files/Newbili-MD-1.1.0-17-armeabi-v7a.apk",
+      "githubUrl": "https://github.com/Rseam-07/Newbili-MD/releases/download/v1.1.0/Newbili-MD-1.1.0-17-armeabi-v7a.apk"
+    },
+    {
+      "abi": "x86_64",
+      "name": "Newbili-MD-1.1.0-17-x86_64.apk",
+      "bytes": 26510551,
+      "sha256": "7fbad0ba4e32187dc03640864ae7839ec78e8ee1190873d730ce322da7b212ff",
+      "url": "https://rseam-07.github.io/downloads/files/Newbili-MD-1.1.0-17-x86_64.apk",
+      "githubUrl": "https://github.com/Rseam-07/Newbili-MD/releases/download/v1.1.0/Newbili-MD-1.1.0-17-x86_64.apk"
+    }
+  ]
+}
