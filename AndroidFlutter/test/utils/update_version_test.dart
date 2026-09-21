@@ -26,7 +26,7 @@ void main() {
     final nextPreview = {
       'tag_name': 'android-preview-2026.09.16',
       'assets': [
-        {'name': 'Newbili-Android-1.0.10-13-arm64-v8a-test.apk'},
+        {'name': 'Newbili-MD-1.0.10-13-arm64-v8a.apk'},
       ],
     };
     final ios = {

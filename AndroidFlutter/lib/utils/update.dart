@@ -187,7 +187,7 @@ Map? findNewerRelease(List releases, String current, {bool android = false}) {
         final name = '${asset['name'] ?? ''}';
         if (!name.endsWith('.apk')) continue;
         hasApk = true;
-        final match = RegExp(r'^Newbili-Android-(\d+\.\d+\.\d+)-(\d+)-')
+        final match = RegExp(r'^Newbili-(?:Android|MD)-(\d+\.\d+\.\d+)-(\d+)-')
             .firstMatch(name);
         if (match != null) {
           version = '${match[1]}+${match[2]}';

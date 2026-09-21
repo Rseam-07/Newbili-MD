@@ -397,6 +397,10 @@ void main() {
     await tester.pump();
     expect(find.text('First'), findsNothing);
     expect(find.text('Second').hitTestable(), findsOneWidget);
+    // ExcludeFocus applies its focus-tree update after this frame; it must not
+    // start a visual transition when reduced motion is enabled.
+    expect(tester.binding.transientCallbackCount, 0);
+    await tester.pump();
     expect(tester.binding.hasScheduledFrame, isFalse);
   });
 

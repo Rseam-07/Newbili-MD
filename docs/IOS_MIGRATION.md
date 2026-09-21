@@ -1,3 +1,7 @@
+# iOS / iPadOS 迁移（暂缓）
+
+2026-09-22：暂停 iOS 迁移和 CI 构建，优先交付 Android 与官网。下面保留已有探索记录，不能视为可安装版本。
+
 # iOS / iPadOS 迁移
 
 MD 版使用 `AndroidFlutter/ios/Runner.xcworkspace`。根目录的原生 Swift 工程是继承的参考实现，不参与 MD 构建。

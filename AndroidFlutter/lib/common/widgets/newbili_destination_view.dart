@@ -65,8 +65,11 @@ class _NewbiliDestinationViewState extends State<NewbiliDestinationView>
   }
 
   ({double opacity, double x}) _pose(int index) {
-    final start = _from[index]!;
-    final end = _to[index]!;
+    final start = _from[index];
+    final end = _to[index];
+    // A controller notification can reach the previous frame's builders before
+    // Flutter removes pages deleted from the navigation settings.
+    if (start == null || end == null) return (opacity: 0, x: 0);
     final t = NewbiliMotion.emphasized.transform(_controller.value);
     return (
       opacity: lerpDouble(start.opacity, end.opacity, t)!,

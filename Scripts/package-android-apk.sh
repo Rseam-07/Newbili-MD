@@ -32,7 +32,7 @@ mkdir -p "$ROOT_DIR/dist"
 
 for abi in armeabi-v7a arm64-v8a x86_64; do
   source_apk="$SOURCE_APK_DIR/app-$abi-release.apk"
-  output_apk="$ROOT_DIR/dist/Newbili-Android-$version_name-$version_code-$abi-test.apk"
+  output_apk="$ROOT_DIR/dist/Newbili-MD-$version_name-$version_code-$abi.apk"
   if [[ ! -f "$source_apk" ]]; then
     echo "Release APK was not produced for $abi." >&2
     exit 1
