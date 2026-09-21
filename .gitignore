@@ -22,6 +22,7 @@ Pods/
 Carthage/Build/
 
 # Local app build artifacts
+/dist/
 .codex-derived/
 .derived-unsigned/
 .derived-unsigned-device/
