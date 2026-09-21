@@ -3,7 +3,7 @@
 一个以 Material Design 为核心的开源 Bilibili 客户端。从 Newbili 的 `android` 分支独立，保留完整提交历史。
 
 - 官网：<https://rseam-07.github.io>（[Cloudflare 备用](https://newbili-md.ny-ravel.workers.dev)）
-- 安装包：<https://github.com/Rseam-07/Newbili-MD/releases>
+- 下载与更新日志：<https://rseam-07.github.io/downloads/>（官网 APK 直链，GitHub Releases 备用）
 - 问题反馈：<https://github.com/Rseam-07/Newbili-MD/issues>
 
 ## 本轮改进
@@ -11,7 +11,8 @@
 - 连贯的封面、页面与侧边内容卡片动画，补齐卡片和常用按钮按压、悬停、导航图标变化。离屏页面关闭 ticker，尊重减少动画设置。
 - 按当前窗口与铰链布局播放页；支持左右分区及半折上下分区，保持播放器实例。
 - 取消网络请求后停止重试，处理导航项删除越界和控制器销毁，存储初始化失败显示恢复指引而非直接退出。
-- iOS / iPadOS 工程复用全部 Flutter 页面和业务逻辑；接入 Keychain、追更通知和系统后台刷新。当前是迁移预览，验收范围见 [iOS 迁移说明](docs/IOS_MIGRATION.md)。
+- 官网默认跟随系统外观，支持手动深浅色切换，提供独立下载与更新日志页。
+- iOS / iPadOS 迁移暂缓，优先完善 Android 与官网。已有探索记录保留在 [iOS 迁移说明](docs/IOS_MIGRATION.md)。
 
 ## 目录
 
@@ -32,7 +33,7 @@ cd AndroidFlutter
 flutter run
 ```
 
-iOS：安装 Xcode 和 CocoaPods，执行 `flutter config --no-enable-swift-package-manager`，从 `AndroidFlutter/ios/Runner.xcworkspace` 打开工程。详见迁移文档。
+iOS 入口为暂缓的探索工程，当前 CI 只检查并构建 Android。
 
 Android 沿用 `com.rseam07.newbili` 包名以保留原 MD 预览版的数据；独立仓库并不要求清除账号或缓存。iOS MD 包名是 `com.rseam07.newbili.md`，可以和原生 Newbili 共存。
 

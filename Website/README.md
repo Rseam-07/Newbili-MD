@@ -9,3 +9,14 @@ Cloudflare 发布：在 Website 中执行 `npx wrangler deploy`。使用当前�
 图片来自项目的界面渲染验收，演示封面属于 Blender 开源短片。更换截图时在原图之外生成 WebP，并保留署名。
 
 主入口： https://rseam-07.github.io 。GitHub Pages 仓库 `Rseam-07/rseam-07.github.io` 存放 dist 的发布镜像；Cloudflare 保留为备用。
+
+## 外观与下载
+
+- `appearance.js` 在首屏样式之前设置主题，默认跟随系统。手动选择保存在本机，跨页、跨标签同步；存储不可用时仍可切换。
+- 下载与更新日志在 `/downloads/`。主按钮使用 GitHub Pages 同域静态文件，GitHub Releases 为备用；不通过公共代理或短链转发 APK。
+- APK 存放在 Pages 镜像仓库的 `downloads/files/`，不放进 Cloudflare 静态目录（单文件限额不同）。两个官网的下载按钮都指向 Pages 直链。
+- 暂未使用国内 CDN，不能承诺中国大陆全部网络可达。
+
+发布流程：先用 `Scripts/package-android-apk.sh` 验证并签名安装包；再执行 `python3 Scripts/update-website-release.py --date YYYY-MM-DD`。脚本从实际文件生成版本、大小、SHA-256、静态下载页与 `releases.json`，任一文件缺失会停止。`--pending` 仅用于本地设计预览，不得作为正式下载页发布。
+
+同步 `Website/dist/` 到 Pages 镜像仓库（保留其 `.git` 和 `downloads/files`），把对应 APK 与校验清单放入 `downloads/files/` 后提交。页面更新不应触发 Android 构建。Cloudflare 在 Website 目录用当前账户执行 `wrangler deploy`。

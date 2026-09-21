@@ -40,6 +40,7 @@ function schedule() { if (!scheduled && !reduced && !document.hidden) scheduled 
 function setMotion(value) {
   reduced = value;
   document.body.classList.toggle('reduced', reduced);
+  document.documentElement.classList.toggle('reduced-motion', reduced);
   document.documentElement.classList.toggle('js-motion', !reduced);
   $('.motion-toggle').setAttribute('aria-pressed', String(reduced));
   $('.motion-toggle').textContent = reduced ? '启用动效' : '减少动效';
