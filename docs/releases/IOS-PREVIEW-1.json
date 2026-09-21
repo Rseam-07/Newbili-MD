@@ -71,5 +71,272 @@
     "System picture in picture",
     "Long playback, audio interruptions, background scheduling, downloads and casting",
     "Real split-window/external-display/foldable performance"
-  ]
+  ],
+  "appCommit": "8694b5a830e8637cd6c347ad084b03c809ac633d",
+  "artifact": {
+    "name": "Newbili-MD-1.1.0-17-iOS-unsigned.ipa",
+    "bytes": 24025015,
+    "sha256": "b6799f80a5f0ea8efc2ce868a3a08ad9b6e108510d58b0711f745dcbfbe81ef7",
+    "bundleVersion": "17",
+    "minimumIOS": "15.0",
+    "deviceFamilies": [
+      1,
+      2
+    ],
+    "releaseAOT": true,
+    "embeddedCommitVerified": true,
+    "debugPayloadAbsent": true,
+    "nativeBinaries": [
+      {
+        "binary": "Runner",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/wakelock_plus.framework/wakelock_plus",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Avfilter.framework/Avfilter",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/objective_c.framework/objective_c",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Avformat.framework/Avformat",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Png16.framework/Png16",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/media_kit_libs_ios_video.framework/media_kit_libs_ios_video",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/image_picker_ios.framework/image_picker_ios",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Dav1d.framework/Dav1d",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Mbedcrypto.framework/Mbedcrypto",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/audio_service.framework/audio_service",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/OrderedSet.framework/OrderedSet",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Freetype.framework/Freetype",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Ass.framework/Ass",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/media_kit_native_event_loop.framework/media_kit_native_event_loop",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/flutter_volume_controller.framework/flutter_volume_controller",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Flutter.framework/Flutter",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Swresample.framework/Swresample",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/FSAChatBottomContainer.framework/FSAChatBottomContainer",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Harfbuzz.framework/Harfbuzz",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/media_kit_video.framework/media_kit_video",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Mpv.framework/Mpv",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/App.framework/App",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Mbedtls.framework/Mbedtls",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Avcodec.framework/Avcodec",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/app_links.framework/app_links",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/url_launcher_ios.framework/url_launcher_ios",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/battery_plus.framework/battery_plus",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/device_info_plus.framework/device_info_plus",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/share_plus.framework/share_plus",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Fribidi.framework/Fribidi",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/file_picker_darwin.framework/file_picker_darwin",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Avutil.framework/Avutil",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/TOCropViewController.framework/TOCropViewController",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Swscale.framework/Swscale",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/package_info_plus.framework/package_info_plus",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/saver_gallery.framework/saver_gallery",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/shared_preferences_foundation.framework/shared_preferences_foundation",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/audio_session.framework/audio_session",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Uchardet.framework/Uchardet",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/native_device_orientation.framework/native_device_orientation",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Mbedx509.framework/Mbedx509",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Placebo.framework/Placebo",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/image_cropper.framework/image_cropper",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/Xml2.framework/Xml2",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/connectivity_plus.framework/connectivity_plus",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/flutter_inappwebview_ios.framework/flutter_inappwebview_ios",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/chat_bottom_container.framework/chat_bottom_container",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/live_photo_maker.framework/live_photo_maker",
+        "arch": "arm64",
+        "platform": "iOS device"
+      },
+      {
+        "binary": "Frameworks/screen_brightness_ios.framework/screen_brightness_ios",
+        "arch": "arm64",
+        "platform": "iOS device"
+      }
+    ]
+  }
 }
