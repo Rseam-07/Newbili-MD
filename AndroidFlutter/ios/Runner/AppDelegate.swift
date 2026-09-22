@@ -3,6 +3,7 @@ import UIKit
 import Security
 import BackgroundTasks
 import UserNotifications
+import GT3Captcha
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
@@ -10,6 +11,8 @@ import UserNotifications
   private var pendingVideo: [String: Any]?
   private let monitor = MDUpdateMonitor()
   private let taskID = "com.rseam07.newbili.md.refresh"
+  private let fileExporter = MDFileExporter()
+  private let captcha = MDCaptcha()
 
   override func application(_ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -30,6 +33,25 @@ import UserNotifications
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
     guard let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "NewbiliMD") else { return }
+    let platform = FlutterMethodChannel(name: "com.rseam07.newbili/platform", binaryMessenger: registrar.messenger())
+    platform.setMethodCallHandler { [weak self] call, result in
+      switch call.method {
+      case "systemFontFamilies": result(UIFont.familyNames.sorted())
+      case "exportFile":
+        guard let self else { result(FlutterError(code: "unavailable", message: "窗口已关闭", details: nil)); return }
+        self.fileExporter.export(call.arguments as? String, source: registrar.viewController, result: result)
+      default: result(FlutterMethodNotImplemented)
+      }
+    }
+    let captchaChannel = FlutterMethodChannel(name: "com.rseam07.newbili/captcha", binaryMessenger: registrar.messenger())
+    captchaChannel.setMethodCallHandler { [weak self] call, result in
+      guard let self else { result(nil); return }
+      switch call.method {
+      case "verify": self.captcha.start(call.arguments, result: result)
+      case "cancel": self.captcha.cancel(); result(nil)
+      default: result(FlutterMethodNotImplemented)
+      }
+    }
     let vault = FlutterMethodChannel(name: "com.rseam07.newbili/legacy_account", binaryMessenger: registrar.messenger())
     vault.setMethodCallHandler { call, result in
       guard call.method == "accountHiveKey" else { result(FlutterMethodNotImplemented); return }
@@ -73,6 +95,124 @@ import UserNotifications
       super.userNotificationCenter(center, didReceive: response, withCompletionHandler: completionHandler)
     }
   }
+}
+
+/// One native verification session. Cancellation, errors and success all settle
+/// the Flutter request exactly once; a failed attempt never sends an SMS.
+private final class MDCaptcha: NSObject, GT3CaptchaManagerDelegate, GT3AsyncTaskProtocol {
+  private var manager: GT3CaptchaManager?
+  private var pending: FlutterResult?
+  private var registration: GT3RegisterParameter?
+
+  func start(_ arguments: Any?, result: @escaping FlutterResult) {
+    guard pending == nil else {
+      result(FlutterError(code: "busy", message: "请先完成当前验证", details: nil)); return
+    }
+    guard let arguments = arguments as? [String: String],
+      let gt = arguments["gt"], !gt.isEmpty,
+      let challenge = arguments["challenge"], !challenge.isEmpty else {
+      result(FlutterError(code: "invalid", message: "验证已过期，请重新获取验证码", details: nil)); return
+    }
+    pending = result
+    let registration = GT3RegisterParameter()
+    registration.gt = gt
+    registration.challenge = challenge
+    registration.success = 1
+    self.registration = registration
+    let manager = GT3CaptchaManager(api1: nil, api2: nil, timeout: 20)
+    self.manager = manager
+    manager.delegate = self
+    manager.useGTView(withTimeout: 20)
+    manager.useGTView(withCornerRadius: 20)
+    manager.useLanguageCode("zh-CN")
+    // Registration is asynchronous. The deprecated configureGTest path races
+    // registerCaptcha and can leave the SDK in its analysing state forever.
+    manager.registerCaptcha(withCustomAsyncTask: self, completion: nil)
+    DispatchQueue.main.async { [weak self, weak manager] in
+      guard let self, let manager, manager === self.manager else { return }
+      manager.startGTCaptchaWith(animated: true)
+    }
+  }
+
+  func cancel() { finish(nil) }
+
+  private func finish(_ value: Any?) {
+    guard let callback = pending else { return }
+    pending = nil
+    let active = manager
+    manager = nil
+    registration = nil
+    active?.delegate = nil
+    active?.stopGTCaptcha()
+    active?.closeGTViewIfIsOpen()
+    callback(value)
+  }
+
+  func executeRegisterTask(completion: @escaping (GT3RegisterParameter?, GT3Error?) -> Void) {
+    completion(registration, nil)
+  }
+  func executeValidationTask(withValidate param: GT3ValidationParam,
+    completion: @escaping (Bool, GT3Error?) -> Void) {
+    guard param.code == "1", let result = param.result,
+      ["geetest_challenge", "geetest_validate", "geetest_seccode"].allSatisfy({
+        !(result[$0] as? String ?? "").isEmpty
+      }) else { completion(false, nil); return }
+    // These signed values are verified by Bilibili in the existing Dart SMS
+    // or password request. This callback only completes the challenge UI.
+    completion(true, nil)
+    DispatchQueue.main.async { [weak self] in self?.finish(result) }
+  }
+  func gtCaptchaUserDidCloseGTView(_ manager: GT3CaptchaManager) { finish(nil) }
+  func gtCaptcha(_ manager: GT3CaptchaManager, errorHandler error: GT3Error) {
+    guard manager === self.manager else { return }
+    if error.code == -999 { finish(nil); return }
+    finish(FlutterError(code: "geetest_\(error.code)",
+      message: "验证加载失败，请检查网络后重新获取验证码", details: nil))
+  }
+  func gtCaptcha(_ manager: GT3CaptchaManager, didReceiveSecondaryCaptchaData data: Data?,
+    response: URLResponse?, error: GT3Error?,
+    decisionHandler: @escaping (GT3SecondaryCaptchaPolicy) -> Void) {
+    decisionHandler(.forbidden)
+  }
+}
+
+/// Exports an existing file without passing its contents across the Dart bridge.
+/// Retains one picker transaction until success, cancellation, or dismissal.
+private final class MDFileExporter: NSObject, UIDocumentPickerDelegate, UIAdaptivePresentationControllerDelegate {
+  private var pending: FlutterResult?
+
+  func export(_ path: String?, source: UIViewController?, result: @escaping FlutterResult) {
+    guard pending == nil else {
+      result(FlutterError(code: "busy", message: "请先完成当前文件保存", details: nil)); return
+    }
+    guard let path, FileManager.default.fileExists(atPath: path) else {
+      result(FlutterError(code: "file_missing", message: "文件不存在，请重新下载", details: nil)); return
+    }
+    let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+    guard var presenter = source ?? scenes.first(where: { $0.activationState == .foregroundActive })?
+      .windows.first(where: \.isKeyWindow)?.rootViewController else {
+      result(FlutterError(code: "no_window", message: "请回到应用后重试", details: nil)); return
+    }
+    while let presented = presenter.presentedViewController { presenter = presented }
+    guard !presenter.isBeingDismissed else {
+      result(FlutterError(code: "no_window", message: "请在页面打开后重试", details: nil)); return
+    }
+    let picker = UIDocumentPickerViewController(forExporting: [URL(fileURLWithPath: path)], asCopy: true)
+    pending = result
+    picker.delegate = self
+    picker.modalPresentationStyle = .formSheet
+    presenter.present(picker, animated: true)
+    picker.presentationController?.delegate = self
+  }
+
+  private func finish(_ saved: Bool) {
+    let result = pending
+    pending = nil
+    result?(saved)
+  }
+  func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) { finish(!urls.isEmpty) }
+  func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) { finish(false) }
+  func presentationControllerDidDismiss(_ presentationController: UIPresentationController) { finish(false) }
 }
 
 private enum MDKeychain {

@@ -67,7 +67,7 @@ class _ActionItemState extends State<ActionItem> {
       child: Icon(
         widget.selectStatus ? widget.selectIcon!.icon! : widget.icon.icon,
         key: ValueKey(widget.selectStatus),
-        size: widget.compact ? 15 : 20,
+        size: widget.compact ? 25 : 22,
         color: widget.selectStatus
             ? primary
             : widget.icon.color ??
@@ -79,15 +79,14 @@ class _ActionItemState extends State<ActionItem> {
 
     if (widget.compact) {
       child = Container(
-        width: 30,
-        height: 30,
+        width: 48,
+        height: 48,
         alignment: Alignment.center,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: colorScheme.onSurface.withValues(alpha: .045),
-          border: Border.all(
-            color: colorScheme.onSurface.withValues(alpha: .06),
-          ),
+          color: widget.selectStatus
+              ? colorScheme.primaryContainer
+              : colorScheme.surfaceContainerHighest,
         ),
         child: child,
       );
@@ -101,7 +100,7 @@ class _ActionItemState extends State<ActionItem> {
           AnimatedBuilder(
             animation: widget.animation!,
             builder: (context, child) => Arc(
-              size: 34,
+              size: widget.compact ? 52 : 34,
               color: primary,
               progress: -widget.animation!.value,
             ),
@@ -110,7 +109,10 @@ class _ActionItemState extends State<ActionItem> {
         ],
       );
     } else {
-      child = SizedBox.square(dimension: 34, child: child);
+      child = SizedBox.square(
+        dimension: widget.compact ? 48 : 34,
+        child: child,
+      );
     }
 
     child = Semantics(
@@ -133,8 +135,8 @@ class _ActionItemState extends State<ActionItem> {
         child: ConstrainedBox(
           constraints: BoxConstraints(
             minWidth: NewbiliMetrics.minTouchTarget,
-            minHeight: widget.expand && !widget.compact
-                ? 64
+            minHeight: widget.expand
+                ? (widget.compact ? 80 : 64)
                 : NewbiliMetrics.minTouchTarget,
           ),
           child: Material(
@@ -158,13 +160,17 @@ class _ActionItemState extends State<ActionItem> {
                 _setPressed(false);
                 if (widget._isThumbsUp) widget.onCancelTriple!();
               },
-              child: widget.expand && !widget.compact
+              child: widget.expand
                   ? Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: [child, _buildText(theme, reduceMotion)],
+                        children: [
+                          child,
+                          if (widget.compact) const SizedBox(height: 6),
+                          _buildText(theme, reduceMotion),
+                        ],
                       ),
                     )
                   : Center(child: child),
@@ -179,7 +185,9 @@ class _ActionItemState extends State<ActionItem> {
   Widget _buildText(ThemeData theme, bool reduceMotion) {
     final hasText = widget.text != null;
     final child = Text(
-      hasText ? widget.text! : '-',
+      widget.compact
+          ? '${widget.semanticsLabel}${hasText ? ' ${widget.text}' : ''}'
+          : (hasText ? widget.text! : '-'),
       key: hasText ? ValueKey(widget.text!) : null,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
@@ -187,7 +195,7 @@ class _ActionItemState extends State<ActionItem> {
         color: widget.selectStatus
             ? theme.colorScheme.primary
             : theme.colorScheme.onSurfaceVariant,
-        fontSize: theme.textTheme.labelSmall!.fontSize,
+        fontSize: widget.compact ? 12 : theme.textTheme.labelSmall!.fontSize,
       ),
     );
     if (hasText) {

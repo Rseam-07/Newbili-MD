@@ -27,6 +27,7 @@ PODS:
     - OrderedSet (~> 6.0.3)
   - flutter_volume_controller (0.0.1):
     - Flutter
+  - GT3CaptchaMD (0.15.9)
   - image_cropper (0.0.5):
     - Flutter
     - TOCropViewController (~> 3.1.2)
@@ -74,6 +75,7 @@ DEPENDENCIES:
   - Flutter (from `Flutter`)
   - flutter_inappwebview_ios (from `.symlinks/plugins/flutter_inappwebview_ios/ios`)
   - flutter_volume_controller (from `.symlinks/plugins/flutter_volume_controller/ios`)
+  - GT3CaptchaMD (from `Geetest/GT3CaptchaMD.podspec`)
   - image_cropper (from `.symlinks/plugins/image_cropper/ios`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
   - live_photo_maker (from `.symlinks/plugins/live_photo_maker/ios`)
@@ -118,6 +120,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_inappwebview_ios/ios"
   flutter_volume_controller:
     :path: ".symlinks/plugins/flutter_volume_controller/ios"
+  GT3CaptchaMD:
+    :podspec: Geetest/GT3CaptchaMD.podspec
   image_cropper:
     :path: ".symlinks/plugins/image_cropper/ios"
   image_picker_ios:
@@ -161,6 +165,7 @@ SPEC CHECKSUMS:
   Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
   flutter_inappwebview_ios: b89ba3482b96fb25e00c967aae065701b66e9b99
   flutter_volume_controller: d9e7a54cb39415100a7cd558240faa1b8e8da6d4
+  GT3CaptchaMD: f8393b5de3e689d2be454cf7641c321f3c02d3e8
   image_cropper: fca51f94982730acae168c4b5d691e0f11aeb259
   image_picker_ios: e0ece4aa2a75771a7de3fa735d26d90817041326
   live_photo_maker: 29280ca88323bd5a33aafd00d98624d5cf522176
@@ -179,6 +184,6 @@ SPEC CHECKSUMS:
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
   wakelock_plus: e29112ab3ef0b318e58cfa5c32326458be66b556
 
-PODFILE CHECKSUM: 23951b4e239b079769381f8b9f1dadef42d91be5
+PODFILE CHECKSUM: 60c1e82e8d3581ea1f158b3a9f6f8f95e7f80cb3
 
 COCOAPODS: 1.17.0

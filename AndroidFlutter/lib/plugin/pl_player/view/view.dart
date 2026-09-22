@@ -280,7 +280,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         } catch (_) {}
 
         try {
-          if (Platform.isIOS || plPlayerController.setSystemBrightness) {
+          if (plPlayerController.setSystemBrightness) {
             _getSystemBrightness();
             _brightnessListener = ScreenBrightnessPlatform
                 .instance
@@ -348,7 +348,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   Future<void> setBrightness(double value) async {
     _brightnessValue.value = value;
     try {
-      if (Platform.isIOS || plPlayerController.setSystemBrightness) {
+      if (plPlayerController.setSystemBrightness) {
         await ScreenBrightnessPlatform.instance.setSystemScreenBrightness(
           value,
         );

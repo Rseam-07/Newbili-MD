@@ -28,7 +28,7 @@ abstract final class ImageUtils {
   static bool silentDownImg = Pref.silentDownImg;
   static final _albumPath = Platform.isAndroid
       ? 'Pictures/${Constants.appName}'
-      : Constants.appName;
+      : null; // iOS add-only access saves to Recents without reading the library.
 
   // 图片分享
   static Future<void> onShareImg(String url) async {
@@ -53,13 +53,17 @@ abstract final class ImageUtils {
   static Future<bool> requestPer() async {
     final status = Platform.isAndroid
         ? await Permission.storage.request()
-        : await Permission.photos.request();
-    if (status == PermissionStatus.denied ||
-        status == PermissionStatus.permanentlyDenied) {
+        : await Permission.photosAddOnly.request();
+    if (status != PermissionStatus.granted &&
+        status != PermissionStatus.limited) {
       SmartDialog.show(
         builder: (context) => AlertDialog(
           title: const Text('提示'),
-          content: const Text('存储权限未授权'),
+          content: Text(
+            status == PermissionStatus.restricted
+                ? '系统限制了相册访问，请检查设备的隐私限制'
+                : '保存需要相册权限，可在系统设置中允许添加照片',
+          ),
           actions: [
             TextButton(
               onPressed: () {
@@ -85,7 +89,7 @@ abstract final class ImageUtils {
         return true;
       }
     }
-    return requestPer();
+    return Platform.isIOS ? requestPer() : true;
   }
 
   static Future<bool> downloadLivePhoto({
@@ -143,6 +147,7 @@ abstract final class ImageUtils {
   }
 
   static Future<bool> downloadImg(List<String> imgList) async {
+    if (imgList.isEmpty) return false;
     if (PlatformUtils.isMobile && !await checkPermissionDependOnSdkInt()) {
       return false;
     }
@@ -165,6 +170,10 @@ abstract final class ImageUtils {
         return (filePath: file.path, name: name, statusCode: 200);
       });
       final result = await Future.wait(futures, eagerError: true);
+      if (cancelToken?.isCancelled == true) {
+        SmartDialog.showToast('已取消下载');
+        return false;
+      }
       bool success = true;
       if (PlatformUtils.isMobile) {
         final saveList = <SaveFileData>[];
@@ -181,7 +190,11 @@ abstract final class ImageUtils {
             success = false;
           }
         }
-        await SaverGallery.saveFiles(saveList, skipIfExists: false);
+        final saved = await SaverGallery.saveFiles(
+          saveList,
+          skipIfExists: false,
+        );
+        success = success && saved.isSuccess;
       } else {
         for (final res in result) {
           if (res.statusCode == 200) {
@@ -255,6 +268,7 @@ abstract final class ImageUtils {
     SaveResult? res;
     fileName += '.$ext';
     if (PlatformUtils.isMobile) {
+      if (!await checkPermissionDependOnSdkInt()) return null;
       SmartDialog.showLoading(msg: '正在保存');
       res = await SaverGallery.saveImage(
         bytes,
@@ -299,6 +313,7 @@ abstract final class ImageUtils {
     }
     SaveResult? res;
     if (PlatformUtils.isMobile) {
+      if (!await checkPermissionDependOnSdkInt()) return;
       res = await SaverGallery.saveFile(
         filePath: filePath,
         fileName: fileName,

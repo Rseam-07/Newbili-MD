@@ -56,7 +56,7 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:material_ui/material_ui.dart' hide RefreshIndicator;
 
 List<SettingsModel> get extraSettings => [
-  if (Platform.isAndroid)
+  if (PlatformUtils.isMobile)
     NormalModel(
       title: '更新通知与追更',
       subtitle: '特别关注、关注 UP 新投稿、自标记番剧、分 P 更新提醒',

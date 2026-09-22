@@ -134,16 +134,23 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                         child: _buildInfo(
                           videoDetail.stat,
                           videoDetail.pubdate,
-                          ownerName: isPortrait
-                              ? videoDetail.owner?.name
-                              : null,
                         ),
                       ),
                       if (introController.enableAi) _aiBtn,
                       if (isPortrait) _moreActions,
                     ],
                   ),
-                  if (isPortrait)
+                  if (isPortrait) ...[
+                    const SizedBox(height: 12),
+                    NoTranslucentArea(
+                      child: _buildOwnerInfo(
+                        isLoading,
+                        true,
+                        false,
+                        videoDetail,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     NoTranslucentArea(
                       child: actionGrid(
                         context,
@@ -151,9 +158,9 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                         introController,
                         videoDetail.stat,
                         compact: true,
-                        videoDetail: videoDetail,
                       ),
                     ),
+                  ],
                   if (introController.showArgueMsg)
                     if (videoDetail.argueInfo?.argueMsg case final argueMsg?
                         when argueMsg.isNotEmpty) ...[
@@ -171,15 +178,6 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                           mainAxisSize: .min,
                           crossAxisAlignment: .start,
                           children: [
-                            if (isPortrait)
-                              NoTranslucentArea(
-                                child: _buildOwnerInfo(
-                                  isLoading,
-                                  isPortrait,
-                                  false,
-                                  videoDetail,
-                                ),
-                              ),
                             ..._infos(videoDetail),
                           ],
                         ),
@@ -469,8 +467,8 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
         return TextButton(
           onPressed: () => introController.actionRelationMod(context),
           style: TextButton.styleFrom(
-            tapTargetSize: .shrinkWrap,
-            visualDensity: const VisualDensity(vertical: -2.8),
+            minimumSize: const Size(88, 44),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             foregroundColor: attr != 0
                 ? colorScheme.outline
                 : colorScheme.onSecondaryContainer,
@@ -500,35 +498,15 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
     UgcIntroController introController,
     VideoStat? stat, {
     bool compact = false,
-    VideoDetailData? videoDetail,
   }) {
     return Row(
       children: [
-        if (compact) ...[
-          Expanded(
-            child: IconButton(
-              tooltip: '访问 UP：${videoDetail?.owner?.name ?? ""}',
-              onPressed: videoDetail?.owner?.mid == null
-                  ? null
-                  : () => Get.toNamed(
-                      '/member?mid=${videoDetail!.owner!.mid}&from_view_aid=${videoDetailCtr.aid}',
-                    ),
-              icon: NetworkImgLayer(
-                src: videoDetail?.owner?.face,
-                width: 34,
-                height: 34,
-                type: .avatar,
-              ),
-            ),
-          ),
-          Expanded(child: _compactFollowButton),
-        ],
         Obx(
           () => ActionItem(
             compact: compact,
             animation: introController.tripleAnimation,
-            icon: const Icon(CupertinoIcons.hand_thumbsup),
-            selectIcon: const Icon(CupertinoIcons.hand_thumbsup_fill),
+            icon: const Icon(Icons.thumb_up_outlined),
+            selectIcon: const Icon(Icons.thumb_up_rounded),
             selectStatus: introController.hasLike.value,
             semanticsLabel: '点赞',
             text: !isLoading ? NumUtils.numFormat(stat!.like) : null,
@@ -553,8 +531,8 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
           () => ActionItem(
             compact: compact,
             animation: introController.tripleAnimation,
-            icon: const Icon(CupertinoIcons.bitcoin_circle),
-            selectIcon: const Icon(CupertinoIcons.bitcoin_circle_fill),
+            icon: const Icon(Icons.toll_outlined),
+            selectIcon: const Icon(Icons.toll_rounded),
             onTap: introController.actionCoinVideo,
             selectStatus: introController.hasCoin,
             semanticsLabel: '投币',
@@ -565,8 +543,8 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
           () => ActionItem(
             compact: compact,
             animation: introController.tripleAnimation,
-            icon: const Icon(CupertinoIcons.star),
-            selectIcon: const Icon(CupertinoIcons.star_fill),
+            icon: const Icon(Icons.star_border_rounded),
+            selectIcon: const Icon(Icons.star_rounded),
             onTap: () => introController.showFavBottomSheet(context),
             onLongPress: () => introController.showFavBottomSheet(
               context,
@@ -591,7 +569,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
           ),
         ActionItem(
           compact: compact,
-          icon: const Icon(CupertinoIcons.share),
+          icon: const Icon(Icons.share_outlined),
           onTap: () => introController.actionShareVideo(context),
           selectStatus: false,
           semanticsLabel: '分享',
@@ -600,46 +578,6 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
       ],
     );
   }
-
-  Widget get _compactFollowButton => Obx(() {
-    final attr = introController.followStatus.value.attribute ?? 0;
-    final label = switch (attr) {
-      1 => '悄悄关注',
-      2 => '已关注',
-      4 || 6 => '已互关',
-      128 => '已拉黑',
-      -10 => '特别关注',
-      _ => '+ 关注',
-    };
-    return Tooltip(
-      message: label,
-      child: TextButton(
-        onPressed: () => introController.actionRelationMod(context),
-        style: TextButton.styleFrom(
-          padding: EdgeInsets.zero,
-          minimumSize: const Size(48, 48),
-        ),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 6),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            color: colorScheme.primary.withValues(alpha: .1),
-          ),
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 11,
-              color: attr == 0
-                  ? colorScheme.primary
-                  : colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-      ),
-    );
-  });
 
   Widget get _moreActions => SizedBox.square(
     dimension: 48,

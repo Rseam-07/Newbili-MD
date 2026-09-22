@@ -110,7 +110,7 @@ class PlPlayerController with BlockConfigMixin {
   final RxDouble volume = RxDouble(
     PlatformUtils.isDesktop ? Pref.desktopVolume : 1.0,
   );
-  final setSystemBrightness = Pref.setSystemBrightness;
+  final setSystemBrightness = Platform.isAndroid && Pref.setSystemBrightness;
 
   final RxDouble brightness = (-1.0).obs;
 
@@ -1563,6 +1563,9 @@ class PlPlayerController with BlockConfigMixin {
     }
 
     _playerCount = 0;
+    if (Platform.isIOS) {
+      ScreenBrightnessPlatform.instance.resetApplicationScreenBrightness();
+    }
     if (removeSafeArea) {
       showSystemBar();
     }

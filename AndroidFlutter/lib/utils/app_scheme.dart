@@ -24,6 +24,7 @@ import 'package:PiliPlus/utils/parse_string.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
 import 'package:PiliPlus/utils/url_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
+import 'package:PiliPlus/utils/web_link.dart';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -322,10 +323,11 @@ abstract final class PiliScheme {
             return false;
           // bilibili://browser/?url=https%3A%2F%2Fwww.bilibili.com%2F
           case 'browser':
-            if (selfHandle) return false;
-            final url = uri.queryParameters['url'];
+          case 'webview':
+          case 'uper':
+            final url = resolveWebLink(uri);
             if (url != null) {
-              _toWebview(url, off, parameters);
+              _toWebview(url.toString(), off, parameters);
               return true;
             }
             return false;

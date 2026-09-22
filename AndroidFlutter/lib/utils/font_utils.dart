@@ -12,6 +12,7 @@ import 'package:ffi/ffi.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart'
     show kDebugMode, defaultTargetPlatform, debugPrint;
+import 'package:flutter/services.dart' show MethodChannel;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:jni/jni.dart';
 import 'package:path/path.dart' as path;
@@ -113,17 +114,24 @@ abstract final class FontUtils {
     return null;
   }
 
-  static Set<String> getFont() {
+  static Future<Set<String>> getFont() async {
     if (_initialized) return _fonts;
-    _initialized = true;
+    if (defaultTargetPlatform == .iOS) {
+      final names = await const MethodChannel('com.rseam07.newbili/platform')
+          .invokeListMethod<String>('systemFontFamilies');
+      _fonts.addAll(names ?? const []);
+      _initialized = true;
+      return _fonts;
+    }
     if (!switch (defaultTargetPlatform) {
       .android => _initAndroid(),
       .windows => _initWindows(),
       .linux => _initLinux(),
       _ => true,
     }) {
-      // TODO: ios/macos CTFontManagerCopyAvailableFontFamilyNames
       SmartDialog.showToast('加载系统字体失败');
+    } else {
+      _initialized = true;
     }
     return _fonts;
   }

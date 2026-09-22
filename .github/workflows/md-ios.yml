@@ -34,7 +34,7 @@ jobs:
           Scripts/prepare-android-flutter.sh
       - name: Focused regression checks
         working-directory: AndroidFlutter
-        run: flutter test --no-pub test/utils/update_version_test.dart test/widgets/onboarding_test.dart
+        run: flutter test --no-pub test/utils/update_version_test.dart test/widgets/onboarding_test.dart test/services/download_manager_test.dart test/utils/web_link_test.dart
       - name: Build simulator with signed native libraries
         env: {FLUTTER_BIN: '${{ env.FLUTTER_ROOT }}/bin/flutter'}
         run: Scripts/build-md-ios.sh simulator

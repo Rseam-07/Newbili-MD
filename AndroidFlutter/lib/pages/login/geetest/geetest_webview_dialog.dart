@@ -5,10 +5,12 @@ import 'package:PiliPlus/http/browser_ua.dart';
 import 'package:PiliPlus/http/init.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/main.dart';
+import 'package:PiliPlus/pages/login/geetest/ios_captcha.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
 import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -22,6 +24,7 @@ class GeetestWebviewDialog extends StatefulWidget {
   State<GeetestWebviewDialog> createState() => _GeetestWebviewDialogState();
 
   static Future<Map<String, dynamic>?> geetest(String gt, String challenge) {
+    if (Platform.isIOS) return IosCaptcha.verify(gt, challenge);
     return showDialog<Map<String, dynamic>>(
       context: Get.context!,
       builder: (context) => GeetestWebviewDialog(gt, challenge),
@@ -89,7 +92,9 @@ class _GeetestWebviewDialogState extends State<GeetestWebviewDialog> {
         }
       }
     }
-    return Error(res.data['message']);
+    return Error(
+      res.data is Map ? res.data['message'] ?? '验证服务暂时不可用' : '验证服务返回无效数据，请重试',
+    );
   }
 
   Future<void> _initLinuxWebview() async {
@@ -236,17 +241,18 @@ class _GeetestWebviewDialogState extends State<GeetestWebviewDialog> {
             verticalScrollBarEnabled: false,
             overScrollMode: .NEVER,
 
-            pageZoom: Platform.isIOS ? 3 : 1,
+            pageZoom: 1,
           ),
           initialData: InAppWebViewInitialData(
             data:
-                '<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width"></head><body><script src="$_geetestJsUri"></script><script>R=flutter_inappwebview.callHandler</script></body></html>',
+                '<!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"></head><body><script src="$_geetestJsUri"></script><script>R=(...args)=>flutter_inappwebview.callHandler(...args)</script></body></html>',
           ),
           onWebViewCreated: (ctr) {
             ctr
               ..addJavaScriptHandler(
                 handlerName: 'success',
                 callback: (args) {
+                  if (!mounted) return;
                   if (args.isNotEmpty) {
                     if (args[0] case Map<String, dynamic> data) {
                       Get.back(result: data);
@@ -259,23 +265,38 @@ class _GeetestWebviewDialogState extends State<GeetestWebviewDialog> {
               ..addJavaScriptHandler(
                 handlerName: 'error',
                 callback: (args) {
-                  debugPrint('geetest error: $args');
+                  if (!mounted) return;
+                  SmartDialog.showToast('验证加载失败，请重试');
+                  Get.back();
                 },
               )
               ..addJavaScriptHandler(
                 handlerName: 'close',
-                callback: (args) => Get.back(),
+                callback: (args) {
+                  if (mounted) Get.back();
+                },
               );
           },
           onLoadStop: (ctr, _) async {
-            final config = await _future;
-            if (!mounted) return;
-            if (config case Success(:final response)) {
-              ctr.evaluateJavascript(source: _showJs(response));
-            } else {
-              config.toast();
+            try {
+              final config = await _future;
+              if (!mounted) return;
+              if (config case Success(:final response)) {
+                await ctr.evaluateJavascript(source: _showJs(response));
+              } else {
+                config.toast();
+                Get.back();
+              }
+            } catch (_) {
+              if (!mounted) return;
+              SmartDialog.showToast('验证加载失败，请检查网络后重试');
               Get.back();
             }
+          },
+          onReceivedError: (ctr, request, error) {
+            if (!mounted || request.isForMainFrame == false) return;
+            SmartDialog.showToast('验证页面加载失败，请重试');
+            Get.back();
           },
         ),
         Positioned(

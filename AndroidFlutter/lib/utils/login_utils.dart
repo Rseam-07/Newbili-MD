@@ -11,6 +11,7 @@ import 'package:PiliPlus/utils/request_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
+import 'package:PiliPlus/utils/web_link.dart';
 import 'package:collection/collection.dart';
 import 'package:crypto/crypto.dart' show Digest;
 import 'package:flutter_inappwebview/flutter_inappwebview.dart' as web;
@@ -27,9 +28,7 @@ abstract final class LoginUtils {
     return Future.wait(
       cookies.map(
         (cookie) => webManager.setCookie(
-          url: web.WebUri(
-            '${Platform.isWindows ? 'https://' : ''}${cookie.domain}',
-          ),
+          url: web.WebUri.uri(webCookieOrigin(cookie.domain)),
           name: cookie.name,
           value: cookie.value,
           path: cookie.path ?? '/',

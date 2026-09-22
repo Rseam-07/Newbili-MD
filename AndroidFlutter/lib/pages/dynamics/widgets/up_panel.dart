@@ -1,11 +1,9 @@
-import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models/common/dynamic/up_panel_position.dart';
 import 'package:PiliPlus/models/dynamics/up.dart';
 import 'package:PiliPlus/pages/dynamics/controller.dart';
 import 'package:PiliPlus/pages/live_follow/view.dart';
 import 'package:PiliPlus/utils/accounts.dart';
-import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
@@ -144,17 +142,21 @@ class _UpPanelState extends State<UpPanel> {
 
     Widget avatar;
     if (isAll) {
-      avatar = DecoratedBox(
-        decoration: const BoxDecoration(
-          shape: .circle,
-          color: Color(0xFF5CB67B),
+      avatar = Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: currentMid == -1
+              ? theme.colorScheme.primaryContainer
+              : theme.colorScheme.surfaceContainerHighest,
         ),
-        child: Image.asset(
-          width: 38,
-          height: 38,
-          cacheWidth: 38.cacheSize(context),
-          Assets.logo2,
-          color: Colors.white,
+        child: Icon(
+          Icons.dynamic_feed_rounded,
+          size: 24,
+          color: currentMid == -1
+              ? theme.colorScheme.onPrimaryContainer
+              : theme.colorScheme.onSurfaceVariant,
         ),
       );
     } else {

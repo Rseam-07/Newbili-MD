@@ -460,6 +460,7 @@ abstract final class PageUtils {
       Get.offOrToNamed(
         '/webview',
         parameters: {'url': url, ...?parameters},
+        arguments: {'inApp': inApp},
         preventDuplicates: off,
         off: off,
       );

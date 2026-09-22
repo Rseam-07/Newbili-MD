@@ -34,6 +34,7 @@ class DownloadService extends GetxService {
   static const _indexFile = 'index.json';
 
   final _lock = Lock();
+  int _downloadGeneration = 0;
 
   final flagNotifier = SetNotifier();
   final waitDownloadQueue = RxList<BiliDownloadEntryInfo>();
@@ -280,8 +281,10 @@ class DownloadService extends GetxService {
 
   Future<void> startDownload(BiliDownloadEntryInfo entry) {
     return _lock.synchronized(() async {
+      final generation = ++_downloadGeneration;
       await _downloadManager?.cancel(isDelete: false);
       await _audioDownloadManager?.cancel(isDelete: false);
+      if (generation != _downloadGeneration) return;
       _downloadManager = null;
       _audioDownloadManager = null;
       if (curDownload.value case final curEntry?) {
@@ -293,13 +296,14 @@ class DownloadService extends GetxService {
       _curCid = entry.cid;
       curDownload.value = entry;
       waitDownloadQueue.refresh();
-      await _startDownload(entry);
+      await _startDownload(entry, generation);
     });
   }
 
   Future<bool> downloadDanmaku({
     required BiliDownloadEntryInfo entry,
     bool isUpdate = false,
+    bool Function()? isCurrent,
   }) async {
     final cid = entry.pageData?.cid ?? entry.source?.cid;
     if (cid == null) {
@@ -332,7 +336,7 @@ class DownloadService extends GetxService {
 
         return true;
       } catch (e) {
-        if (!isUpdate) {
+        if (!isUpdate && (isCurrent?.call() ?? true)) {
           _updateCurStatus(DownloadStatus.failDanmaku);
         }
         if (kDebugMode) SmartDialog.showToast(e.toString());
@@ -364,9 +368,17 @@ class DownloadService extends GetxService {
     }
   }
 
-  Future<void> _startDownload(BiliDownloadEntryInfo entry) async {
+  Future<void> _startDownload(
+    BiliDownloadEntryInfo entry,
+    int generation,
+  ) async {
+    bool isCurrent() =>
+        generation == _downloadGeneration &&
+        identical(curDownload.value, entry);
+    if (!isCurrent()) return;
     try {
-      if (!await downloadDanmaku(entry: entry)) {
+      if (!await downloadDanmaku(entry: entry, isCurrent: isCurrent) ||
+          !isCurrent()) {
         return;
       }
 
@@ -378,6 +390,7 @@ class DownloadService extends GetxService {
         source: entry.source,
         pageData: entry.pageData,
       );
+      if (!isCurrent()) return;
 
       final videoDir = Directory(path.join(entry.entryDirPath, entry.typeTag));
       if (!videoDir.existsSync()) {
@@ -390,7 +403,7 @@ class DownloadService extends GetxService {
         _downloadCover(entry: entry),
       ]);
 
-      if (curDownload.value?.cid != entry.cid) {
+      if (!isCurrent()) {
         return;
       }
 
@@ -400,16 +413,24 @@ class DownloadService extends GetxService {
           _downloadManager = DownloadManager(
             url: first.url,
             path: path.join(videoDir.path, PathUtils.videoNameType1),
-            onReceiveProgress: _onReceive,
-            onDone: _onDone,
+            onReceiveProgress: (received, total) {
+              if (isCurrent()) _onReceive(received, total);
+            },
+            onDone: ([error]) {
+              if (isCurrent()) _onDone(error);
+            },
           );
           break;
         case Type2 mediaFileInfo:
           _downloadManager = DownloadManager(
             url: mediaFileInfo.video.first.baseUrl,
             path: path.join(videoDir.path, PathUtils.videoNameType2),
-            onReceiveProgress: _onReceive,
-            onDone: _onDone,
+            onReceiveProgress: (received, total) {
+              if (isCurrent()) _onReceive(received, total);
+            },
+            onDone: ([error]) {
+              if (isCurrent()) _onDone(error);
+            },
           );
           final audio = mediaFileInfo.audio;
           if (audio != null && audio.isNotEmpty) {
@@ -417,7 +438,9 @@ class DownloadService extends GetxService {
               url: audio.first.baseUrl,
               path: path.join(videoDir.path, PathUtils.audioNameType2),
               onReceiveProgress: null,
-              onDone: _onAudioDone,
+              onDone: ([error]) {
+                if (isCurrent()) _onAudioDone(error);
+              },
             );
           }
           late final first = mediaFileInfo.video.first;
@@ -433,6 +456,7 @@ class DownloadService extends GetxService {
           break;
       }
     } catch (e) {
+      if (!isCurrent()) return;
       _updateCurStatus(DownloadStatus.failPlayUrl);
       if (kDebugMode) {
         debugPrint('get download url error: $e');
@@ -447,7 +471,7 @@ class DownloadService extends GetxService {
 
   void _onReceive(int progress, int total) {
     if (curDownload.value case final entry?) {
-      if (progress == 0 && total != 0) {
+      if (total > 0 && entry.totalBytes != total) {
         _updateBiliDownloadEntryJson(entry..totalBytes = total);
       }
       entry
@@ -497,9 +521,10 @@ class DownloadService extends GetxService {
 
   Future<void> _completeDownload() async {
     final entry = curDownload.value;
-    if (entry == null) {
+    if (entry == null || entry.isCompleted) {
       return;
     }
+    final generation = _downloadGeneration;
     entry
       ..downloadedBytes = entry.totalBytes
       ..isCompleted = true;
@@ -507,6 +532,10 @@ class DownloadService extends GetxService {
     waitDownloadQueue.remove(entry);
     downloadList.insert(0, entry);
     flagNotifier.refresh();
+    if (generation != _downloadGeneration ||
+        !identical(curDownload.value, entry)) {
+      return;
+    }
     _curCid = null;
     curDownload.value = null;
     _downloadManager = null;
@@ -570,6 +599,7 @@ class DownloadService extends GetxService {
     required bool isDelete,
     bool downloadNext = true,
   }) async {
+    ++_downloadGeneration;
     await _downloadManager?.cancel(isDelete: isDelete);
     await _audioDownloadManager?.cancel(isDelete: isDelete);
     _downloadManager = null;

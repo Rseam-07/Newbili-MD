@@ -1,7 +1,14 @@
 import 'package:PiliPlus/utils/platform_utils.dart';
 
+import 'dart:io' show Platform;
+
 abstract final class BrowserUa {
-  static String get platform => PlatformUtils.isMobile ? mob : pc;
+  static String get platform =>
+      Platform.isIOS ? ios : (PlatformUtils.isMobile ? mob : pc);
+
+  static const ios =
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) '
+      'AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
 
   static const pc =
       'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.2 Safari/605.1.15';

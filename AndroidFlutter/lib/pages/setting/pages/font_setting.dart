@@ -32,7 +32,9 @@ class _FontSettingPageState extends State<FontSettingPage> {
 
   final Map<String, Uint8List> _customFonts = {};
 
-  late final List<String> _fonts;
+  List<String> _fonts = [];
+  bool _loadingFonts = true;
+  bool _fontLoadFailed = false;
   late ColorScheme colorScheme;
   late bool isPortrait;
   late ScrollController scrollController;
@@ -42,7 +44,26 @@ class _FontSettingPageState extends State<FontSettingPage> {
   @override
   void initState() {
     super.initState();
-    _fonts = FontUtils.getFont().toList();
+    _loadFonts();
+  }
+
+  Future<void> _loadFonts() async {
+    try {
+      final fonts = (await FontUtils.getFont()).toList()..sort();
+      if (!mounted) return;
+      setState(() {
+        _fonts = fonts;
+        _loadingFonts = false;
+        _fontLoadFailed = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loadingFonts = false;
+        _fontLoadFailed = true;
+      });
+      return;
+    }
 
     if (_selectedFont != null && !_appFont.isCustom) {
       final index = _fonts.indexWhere((e) => e == _selectedFont);
@@ -259,6 +280,17 @@ class _FontSettingPageState extends State<FontSettingPage> {
                       child: CustomScrollView(
                         controller: scrollController,
                         slivers: [
+                          if (_loadingFonts)
+                            const SliverToBoxAdapter(
+                              child: LinearProgressIndicator(),
+                            ),
+                          if (_fontLoadFailed)
+                            SliverToBoxAdapter(
+                              child: ListTile(
+                                title: const Text('系统字体加载失败，点击重试'),
+                                onTap: _loadFonts,
+                              ),
+                            ),
                           SliverToBoxAdapter(
                             child: ListTile(
                               minTileHeight: _tileHeight,

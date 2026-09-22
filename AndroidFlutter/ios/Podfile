@@ -30,6 +30,10 @@ flutter_ios_podfile_setup
 target 'Runner' do
   use_frameworks!
 
+  # The official XCFramework includes arm64 simulator support. The legacy
+  # CocoaPods package excludes arm64 for the entire app's simulator build.
+  pod 'GT3CaptchaMD', :podspec => 'Geetest/GT3CaptchaMD.podspec'
+
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
     inherit! :search_paths

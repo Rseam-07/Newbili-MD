@@ -391,7 +391,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
     removeObserverMobile(this);
 
-    if (Platform.isAndroid && !videoDetailController.setSystemBrightness) {
+    if (PlatformUtils.isMobile && !videoDetailController.setSystemBrightness) {
       ScreenBrightnessPlatform.instance.resetApplicationScreenBrightness();
     }
 
@@ -435,7 +435,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     introController.startTimer();
 
     if (mounted &&
-        Platform.isAndroid &&
+        PlatformUtils.isMobile &&
         !videoDetailController.setSystemBrightness) {
       if (videoDetailController.brightness != null) {
         plPlayerController?.brightness.value =
