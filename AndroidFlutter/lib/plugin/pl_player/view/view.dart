@@ -1,4 +1,5 @@
 import 'package:PiliPlus/plugin/pl_player/models/pinch_fullscreen.dart';
+import 'package:PiliPlus/utils/preview_image_cache.dart';
 
 import 'dart:async';
 import 'dart:io';
@@ -61,7 +62,6 @@ import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/mobile_observer.dart';
-import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
@@ -2234,7 +2234,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     final progress = 0.0.obs;
     final name =
         '${ctr.cid}-${segment.first.toStringAsFixed(3)}_${segment.second.toStringAsFixed(3)}.webp';
-    final file = '$tmpDirPath/$name';
+    final workingDirectory = await CacheManager.temporary.create(
+      'video-export',
+    );
+    final file = '${workingDirectory.path}/$name';
 
     final mpv = MpvConvertWebp(
       url!,
@@ -2252,19 +2255,24 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       backType: SmartBackType.normal,
       builder: (_) => LoadingWidget(progress: progress, msg: '正在保存，可能需要较长时间'),
       onDismiss: () async {
-        if (progress.value < 1.0) {
-          mpv.dispose();
+        try {
+          if (progress.value < 1.0) {
+            mpv.dispose();
+          }
+          if (await future) {
+            await ImageUtils.saveFileImg(
+              filePath: file,
+              fileName: name,
+              needToast: true,
+            );
+          } else {
+            SmartDialog.showToast('转码出现错误或已取消');
+          }
+          if (isPlay) ctr.play();
+        } finally {
+          await CacheManager.temporary.release(workingDirectory);
+          progress.close();
         }
-        if (await future) {
-          await ImageUtils.saveFileImg(
-            filePath: file,
-            fileName: name,
-            needToast: true,
-          );
-        } else {
-          SmartDialog.showToast('转码出现错误或已取消');
-        }
-        if (isPlay) ctr.play();
       },
     );
   }

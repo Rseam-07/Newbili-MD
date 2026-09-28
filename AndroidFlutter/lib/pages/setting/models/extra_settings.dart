@@ -25,6 +25,7 @@ import 'package:PiliPlus/pages/common/slide/common_slide_page.dart';
 import 'package:PiliPlus/pages/home/controller.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
 import 'package:PiliPlus/pages/updates/view.dart';
+import 'package:PiliPlus/pages/setting/cache_page.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/slider_dialog.dart';
@@ -619,7 +620,7 @@ List<SettingsModel> get extraSettings => [
     ),
   ),
   NormalModel(
-    title: '最大缓存大小',
+    title: '存储与缓存',
     getSubtitle: () =>
         '当前最大缓存大小: 「${CacheManager.formatSize(Pref.maxCacheSize)}」',
     leading: const Icon(Icons.delete_outlined),
@@ -1165,44 +1166,7 @@ void _showProxyDialog(BuildContext context) {
   );
 }
 
-void _showCacheDialog(BuildContext context, VoidCallback setState) {
-  String valueStr = '';
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('最大缓存大小'),
-      content: TextField(
-        autofocus: true,
-        onChanged: (value) => valueStr = value,
-        keyboardType: TextInputType.number,
-        inputFormatters: FilteringText.decimal,
-        decoration: const InputDecoration(suffixText: 'MB'),
-      ),
-      actions: [
-        TextButton(
-          onPressed: Get.back,
-          child: Text(
-            '取消',
-            style: TextStyle(color: ColorScheme.of(context).outline),
-          ),
-        ),
-        TextButton(
-          onPressed: () async {
-            try {
-              final val = num.parse(valueStr);
-              Get.back();
-              await GStorage.setting.put(
-                SettingBoxKey.maxCacheSize,
-                val * 1024 * 1024,
-              );
-              setState();
-            } catch (e) {
-              SmartDialog.showToast(e.toString());
-            }
-          },
-          child: const Text('确定'),
-        ),
-      ],
-    ),
-  );
+Future<void> _showCacheDialog(BuildContext context, VoidCallback setState) async {
+  await Get.to(() => const CacheSettingsPage());
+  if (context.mounted) setState();
 }

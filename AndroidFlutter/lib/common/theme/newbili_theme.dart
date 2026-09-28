@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 abstract final class NewbiliMotion {
+  static const press = Duration(milliseconds: 90);
   static const feedback = Duration(milliseconds: 160);
   static const container = Duration(milliseconds: 300);
   static const route = Duration(milliseconds: 400);

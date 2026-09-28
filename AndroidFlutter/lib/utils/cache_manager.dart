@@ -1,84 +1,110 @@
-import 'dart:io' show Directory, File;
+import 'dart:async';
+import 'dart:io';
 
-import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/storage.dart';
+import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:PiliPlus/utils/transient_files.dart';
 import 'package:cached_network_image_ce/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/painting.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 
+class CacheUsage {
+  const CacheUsage({required this.images, required this.temporary});
+  final int images;
+  final int temporary;
+  int get total => images + temporary;
+}
+
 abstract final class CacheManager {
   static late final DefaultCacheManager manager;
+  static late final TransientFileStore temporary;
+  static Future<CacheUsage>? _scan;
+  static Future<void>? _cleaning;
 
-  static Future<void> ensureInitialized() => DefaultCacheManager.init(
-    maxNrOfCacheLength: Pref.maxCacheSize.toInt(),
-  ).then((i) => manager = i);
+  static Future<void> ensureInitialized() async {
+    final temp = await getTemporaryDirectory();
+    temporary = TransientFileStore(
+      Directory(path.join(temp.path, 'newbili-transient')),
+    );
+    manager = await DefaultCacheManager.init(
+      maxNrOfCacheLength: Pref.maxCacheSize.toInt(),
+      connectionParameters: ConnectionParameters(
+        connectionTimeout: const Duration(seconds: 15),
+        requestTimeout: const Duration(seconds: 30),
+      ),
+    );
+    PaintingBinding.instance.imageCache
+      ..maximumSizeBytes = 64 << 20
+      ..maximumSize = 256;
+    unawaited(_maintainTemporary(temp));
+  }
 
-  // 获取缓存目录
-  @pragma('vm:notify-debugger-on-exception')
-  static Future<int> loadApplicationCache() async {
+  static Future<void> _maintainTemporary(Directory temp) async {
     try {
-      if (PlatformUtils.isDesktop) {
-        return manager.getTotalLength();
-      }
-
-      final Directory tempDirectory = await getTemporaryDirectory();
-      if (tempDirectory.existsSync()) {
-        return await getTotalSizeOfFilesInDir(tempDirectory);
-      }
-    } catch (_) {}
-    return 0;
-  }
-
-  // 循环计算文件的大小
-  @pragma('vm:notify-debugger-on-exception')
-  static Future<int> getTotalSizeOfFilesInDir(Directory file) async {
-    int total = 0;
-    await for (final child in file.list(recursive: false)) {
-      if (child is File) {
-        total += await child.length();
-      } else if (child is Directory) {
-        if (path.equals(child.path, manager.cacheDir)) {
-          total += manager.getTotalLength();
-        } else {
-          await for (final i in child.list(recursive: true)) {
-            if (i is File) {
-              total += await i.length();
-            }
-          }
-        }
-      }
+      await temporary.prune();
+      await TransientFileStore.pruneLegacy(temp);
+    } catch (error) {
+      if (kDebugMode) debugPrint('Temporary cache maintenance: $error');
     }
-    return total;
   }
 
-  // 缓存大小格式转换
+  static Future<void> setLimit(int bytes) async {
+    if (bytes < (32 << 20) || bytes > (2048 << 20)) {
+      throw ArgumentError('缓存上限须在 32–2048 MB 之间');
+    }
+    await _scan;
+    final previous = manager.maxNrOfCacheLength;
+    await manager.setMaxCacheLength(bytes);
+    try {
+      await GStorage.setting.put(SettingBoxKey.maxCacheSize, bytes);
+    } catch (_) {
+      await manager.setMaxCacheLength(previous);
+      rethrow;
+    }
+  }
+
+  static Future<CacheUsage> usage() =>
+      _scan ??= _readUsage().whenComplete(() => _scan = null);
+
+  static Future<CacheUsage> _readUsage() async {
+    // Directory traversal stays off the animation/UI isolate.
+    final sizes = await compute(_measure, [
+      manager.cacheDir,
+      temporary.root.path,
+    ]);
+    return CacheUsage(images: sizes[0], temporary: sizes[1]);
+  }
+
+  static Future<List<int>> _measure(List<String> directories) async => [
+    for (final directory in directories)
+      await TransientFileStore.sizeOf(Directory(directory)),
+  ];
+
+  static Future<int> loadApplicationCache() async => (await usage()).total;
+
   static String formatSize(num value) {
-    const unitArr = ['B', 'K', 'M', 'G', 'T', 'P'];
-    int index = 0;
-    while (value >= 1024) {
+    if (!value.isFinite || value < 0) value = 0;
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    var index = 0;
+    while (value >= 1024 && index < units.length - 1) {
       index++;
-      value = value / 1024;
+      value /= 1024;
     }
-    String size = value.toStringAsFixed(2);
-    return size + (unitArr.elementAtOrNull(index) ?? '');
+    return '${value.toStringAsFixed(index == 0 ? 0 : 1)} ${units[index]}';
   }
 
-  // 清除 Library/Caches 目录及文件缓存
-  @pragma('vm:notify-debugger-on-exception')
-  static Future<void> clearLibraryCache() async {
-    try {
-      await manager.emptyCache();
-      if (PlatformUtils.isDesktop) return;
+  static Future<void> clearLibraryCache() =>
+      _cleaning ??= _clear().whenComplete(() => _cleaning = null);
 
-      final tempDirectory = await getTemporaryDirectory();
-      if (tempDirectory.existsSync()) {
-        await for (final file in tempDirectory.list(recursive: false)) {
-          if (file is Directory && path.equals(file.path, manager.cacheDir)) {
-            continue;
-          }
-          await file.delete(recursive: true);
-        }
-      }
-    } catch (_) {}
+  static Future<void> _clear() async {
+    await _scan;
+    // Visible images retain their live handles. Offline videos and WebView
+    // login state are outside both owned cache directories.
+    PaintingBinding.instance.imageCache.clear();
+    await manager.emptyCache();
+    await temporary.prune(allInactive: true);
   }
 }

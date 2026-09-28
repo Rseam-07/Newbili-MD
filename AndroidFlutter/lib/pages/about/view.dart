@@ -5,12 +5,12 @@ import 'package:PiliPlus/build_config.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/style.dart';
-import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/dialog/export_import.dart';
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/pages/mine/controller.dart';
+import 'package:PiliPlus/pages/setting/cache_page.dart';
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
@@ -64,6 +64,8 @@ class _AboutPageState extends State<AboutPage> {
       if (mounted) {
         cacheSize.value = CacheManager.formatSize(res);
       }
+    }).catchError((Object _) {
+      if (mounted) cacheSize.value = '暂时无法读取';
     });
   }
 
@@ -215,32 +217,15 @@ Commit Hash: ${BuildConfig.commitHash}''',
             trailing: Icon(Icons.arrow_forward, size: 16, color: outline),
           ),
           ListTile(
-            onTap: () {
-              if (cacheSize.value.isNotEmpty) {
-                showConfirmDialog(
-                  context: context,
-                  title: const Text('提示'),
-                  content: const Text('该操作将清除图片及网络请求缓存数据，确认清除？'),
-                  onConfirm: () async {
-                    SmartDialog.showLoading(msg: '正在清除...');
-                    try {
-                      await CacheManager.clearLibraryCache();
-                      SmartDialog.showToast('清除成功');
-                    } catch (err) {
-                      SmartDialog.showToast(err.toString());
-                    } finally {
-                      SmartDialog.dismiss();
-                    }
-                    getCacheSize();
-                  },
-                );
-              }
+            onTap: () async {
+              await Get.to(() => const CacheSettingsPage());
+              if (mounted) getCacheSize();
             },
             leading: const Icon(Icons.delete_outline),
-            title: const Text('清除缓存'),
+            title: const Text('存储与缓存'),
             subtitle: Obx(
               () => Text(
-                '图片及网络缓存 ${cacheSize.value}',
+                '图片与临时文件 ${cacheSize.value}',
                 style: subTitleStyle,
               ),
             ),

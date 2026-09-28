@@ -1,5 +1,7 @@
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/newbili_form.dart';
+import 'package:PiliPlus/common/widgets/newbili_press_feedback.dart';
+import 'package:PiliPlus/common/theme/newbili_theme.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// Shared with history, watch later and favorite folders. The cover geometry
@@ -155,48 +157,59 @@ class NewbiliLibraryTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Semantics(
         selected: selecting ? selected : null,
-        child: Material(
-          color: NewbiliFormStyle.card(context),
-          borderRadius: BorderRadius.circular(20),
-          clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: onTap,
-            onLongPress: onLongPress,
-            onSecondaryTap: onSecondaryTap,
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final textWidth =
-                      constraints.maxWidth -
-                      92 -
-                      10 -
-                      (action == null ? 0 : 48);
-                  // Keep at least seven title glyphs per line at the user's
-                  // selected text size; use full-width text on narrow screens.
-                  if (textWidth <
-                      MediaQuery.textScalerOf(context).scale(titleSize) * 7) {
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: NewbiliPressFeedback(
+          enabled: onTap != null || onLongPress != null,
+          pressedScale: .985,
+          hoverScale: 1.005,
+          child: Material(
+            animationDuration: NewbiliMotion.duration(
+              context,
+              NewbiliMotion.feedback,
+            ),
+            color: selected
+                ? scheme.secondaryContainer
+                : NewbiliFormStyle.card(context),
+            borderRadius: BorderRadius.circular(20),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onTap,
+              onLongPress: onLongPress,
+              onSecondaryTap: onSecondaryTap,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final textWidth =
+                        constraints.maxWidth -
+                        92 -
+                        10 -
+                        (action == null ? 0 : 48);
+                    // Keep at least seven title glyphs per line at the user's
+                    // selected text size; use full-width text on narrow screens.
+                    if (textWidth <
+                        MediaQuery.textScalerOf(context).scale(titleSize) * 7) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [coverColumn, ?action],
+                          ),
+                          const SizedBox(height: 10),
+                          info,
+                        ],
+                      );
+                    }
+                    return Row(
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [coverColumn, ?action],
-                        ),
-                        const SizedBox(height: 10),
-                        info,
+                        coverColumn,
+                        const SizedBox(width: 10),
+                        Expanded(child: info),
+                        ?action,
                       ],
                     );
-                  }
-                  return Row(
-                    children: [
-                      coverColumn,
-                      const SizedBox(width: 10),
-                      Expanded(child: info),
-                      ?action,
-                    ],
-                  );
-                },
+                  },
+                ),
               ),
             ),
           ),

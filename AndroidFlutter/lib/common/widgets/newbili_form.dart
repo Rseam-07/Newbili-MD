@@ -1,4 +1,6 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:PiliPlus/common/theme/newbili_theme.dart';
+import 'package:PiliPlus/common/widgets/newbili_press_feedback.dart';
 
 /// Shared Material spacing and tonal surfaces for account and settings pages.
 abstract final class NewbiliFormStyle {
@@ -115,67 +117,78 @@ class NewbiliSettingsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return InkWell(
-      onTap: onTap,
-      onLongPress: onLongPress,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: subtitle == null ? 56 : 64),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            spacing: 13,
-            children: [
-              Icon(icon, size: 22, color: scheme.primary),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  spacing: 2,
-                  children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: subtitle == null
-                            ? FontWeight.w400
-                            : FontWeight.w600,
-                        color: scheme.onSurface,
-                      ),
-                    ),
-                    if (subtitle != null)
+    final stackedValue = MediaQuery.textScalerOf(context).scale(16) > 24;
+    final valueLabel = value == null
+        ? null
+        : AnimatedSwitcher(
+            duration: NewbiliMotion.duration(context, NewbiliMotion.feedback),
+            child: Text(
+              value!,
+              key: ValueKey(value),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 14, color: scheme.onSurfaceVariant),
+            ),
+          );
+    return NewbiliPressFeedback(
+      enabled: onTap != null || onLongPress != null,
+      pressedScale: .99,
+      hoverScale: 1,
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: subtitle == null ? 56 : 64),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              spacing: 13,
+              children: [
+                Icon(icon, size: 22, color: scheme.primary),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: 2,
+                    children: [
                       Text(
-                        subtitle!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                        title,
                         style: TextStyle(
-                          fontSize: 12,
-                          color: scheme.onSurfaceVariant,
+                          fontSize: 16,
+                          fontWeight: subtitle == null
+                              ? FontWeight.w400
+                              : FontWeight.w600,
+                          color: scheme.onSurface,
                         ),
                       ),
-                  ],
-                ),
-              ),
-              if (value != null)
-                Flexible(
-                  child: Text(
-                    value!,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: scheme.onSurfaceVariant,
-                    ),
+                      if (subtitle != null)
+                        Text(
+                          subtitle!,
+                          maxLines: stackedValue ? 3 : 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                        ),
+                      if (stackedValue && valueLabel != null) valueLabel,
+                    ],
                   ),
                 ),
-              if (trailing != null)
-                trailing!
-              else if (onTap != null)
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 15,
-                  color: scheme.outline.withValues(alpha: .65),
-                ),
-            ],
+                if (!stackedValue && valueLabel != null)
+                  Flexible(
+                    child: valueLabel,
+                  ),
+                if (trailing != null)
+                  trailing!
+                else if (onTap != null)
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 15,
+                    color: scheme.outline.withValues(alpha: .65),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

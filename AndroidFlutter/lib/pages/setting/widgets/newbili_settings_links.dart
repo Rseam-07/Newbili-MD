@@ -1,6 +1,7 @@
 import 'package:PiliPlus/common/widgets/newbili_form.dart';
 import 'package:PiliPlus/models/common/setting_type.dart';
 import 'package:PiliPlus/pages/updates/view.dart';
+import 'package:PiliPlus/pages/setting/cache_page.dart';
 import 'package:get/get.dart';
 import 'package:flutter/cupertino.dart' show CupertinoIcons;
 import 'package:material_ui/material_ui.dart';
@@ -28,6 +29,12 @@ class NewbiliSettingsLinks extends StatelessWidget {
         subtitle: '特别关注 · UP 投稿 · 新增分 P 提醒',
         icon: CupertinoIcons.bell,
         onTap: () => Get.to(() => const UpdateNotificationPage()),
+      ),
+      NewbiliSettingsRow(
+        title: '存储与缓存',
+        subtitle: '缓存占用 · 自动回收 · 离线视频',
+        icon: Icons.storage_rounded,
+        onTap: () => Get.to(() => const CacheSettingsPage()),
       ),
       for (final (type, title, subtitle, icon) in const [
         (

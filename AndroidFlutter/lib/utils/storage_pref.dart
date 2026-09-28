@@ -625,8 +625,12 @@ abstract final class Pref {
   static bool get showPgcTimeline =>
       _setting.get(SettingBoxKey.showPgcTimeline, defaultValue: true);
 
-  static num get maxCacheSize =>
-      _setting.get(SettingBoxKey.maxCacheSize) ?? 1 << 30;
+  static num get maxCacheSize {
+    final value = _setting.get(SettingBoxKey.maxCacheSize);
+    return value is num && value.isFinite && value >= (32 << 20)
+        ? value.clamp(32 << 20, 2048 << 20)
+        : 256 << 20;
+  }
 
   static bool get optTabletNav =>
       _setting.get(SettingBoxKey.optTabletNav, defaultValue: true);

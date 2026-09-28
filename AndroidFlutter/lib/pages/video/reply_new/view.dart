@@ -23,12 +23,11 @@ import 'package:PiliPlus/pages/emote/view.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/pages/video/reply_search_item/view.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
+import 'package:PiliPlus/utils/cache_manager.dart';
 import 'package:PiliPlus/utils/extension/context_ext.dart';
 import 'package:PiliPlus/utils/grid.dart';
-import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/theme_utils.dart';
-import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart' hide TextField;
@@ -61,11 +60,15 @@ class ReplyPage extends CommonRichTextPubPage {
 }
 
 class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
+  final _screenshotDirectories = <Directory>[];
   final RxBool _syncToDynamic = false.obs;
   final heroTag = Get.arguments?['heroTag'];
 
   @override
   void dispose() {
+    for (final directory in _screenshotDirectories) {
+      unawaited(CacheManager.temporary.release(directory));
+    }
     Get
       ..delete<EmotePanelController>()
       ..delete<DynMentionController>();
@@ -354,14 +357,25 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
                         .videoPlayerController
                         ?.screenshot();
                     if (res != null) {
-                      final png = await res.toByteData(format: .png);
-                      if (png != null) {
-                        final path =
-                            '$tmpDirPath/${Utils.generateRandomString(8)}.png';
-                        await File(path).writeAsBytes(png.buffer.asUint8List());
-                        imageList.add(FilePicModel(path: path));
+                      try {
+                        final png = await res.toByteData(format: .png);
+                        if (png != null && mounted) {
+                          final directory = await CacheManager.temporary.create(
+                            'reply-shot',
+                          );
+                          if (!mounted) {
+                            await CacheManager.temporary.release(directory);
+                            return;
+                          }
+                          _screenshotDirectories.add(directory);
+                          final path = '${directory.path}/screenshot.png';
+                          await File(path)
+                              .writeAsBytes(png.buffer.asUint8List());
+                          if (mounted) imageList.add(FilePicModel(path: path));
+                        }
+                      } finally {
+                        res.dispose();
                       }
-                      res.dispose();
                     } else {
                       debugPrint('null screenshot');
                     }

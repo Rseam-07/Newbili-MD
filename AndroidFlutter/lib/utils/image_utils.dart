@@ -1,5 +1,5 @@
 import 'dart:async' show FutureOr;
-import 'dart:io' show File, Platform;
+import 'dart:io' show Directory, File, Platform;
 import 'dart:math' as math;
 import 'dart:typed_data' show Uint8List;
 
@@ -10,7 +10,6 @@ import 'package:PiliPlus/utils/device_utils.dart';
 import 'package:PiliPlus/utils/extension/file_ext.dart';
 import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:PiliPlus/utils/global_data.dart';
-import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/permission_handler.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/share_utils.dart';
@@ -98,14 +97,16 @@ abstract final class ImageUtils {
     required int width,
     required int height,
   }) async {
+    Directory? workingDirectory;
     try {
       if (PlatformUtils.isMobile && !await checkPermissionDependOnSdkInt()) {
         return false;
       }
       if (!silentDownImg) SmartDialog.showLoading(msg: '正在下载');
 
-      String videoName = "video_${Utils.getFileName(liveUrl)}";
-      String videoPath = '$tmpDirPath/$videoName';
+      final videoName = "video_${Utils.getFileName(liveUrl)}";
+      workingDirectory = await CacheManager.temporary.create('live-photo');
+      final videoPath = '${workingDirectory.path}/$videoName';
 
       final res = await Request().downloadFile(liveUrl.http2https, videoPath);
       if (res.statusCode != 200) throw '${res.statusCode}';
@@ -142,6 +143,9 @@ abstract final class ImageUtils {
       SmartDialog.showToast(err.toString());
       return false;
     } finally {
+      if (workingDirectory != null) {
+        await CacheManager.temporary.release(workingDirectory);
+      }
       if (!silentDownImg) SmartDialog.dismiss(status: SmartStatus.loading);
     }
   }

@@ -1,11 +1,11 @@
 import 'dart:async' show StreamSubscription, Timer;
 
 import 'package:PiliPlus/models/common/video/background_playback_mode.dart';
+import 'package:PiliPlus/utils/preview_image_cache.dart';
 
 import 'dart:convert' show ascii, utf8;
 import 'dart:io' show Platform;
 import 'dart:math' show max, min;
-import 'dart:ui' as ui;
 
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/http/browser_ua.dart';
@@ -1630,7 +1630,8 @@ class PlPlayerController with BlockConfigMixin {
     }
   }
 
-  late final Map<String, ui.Image?> previewCache = {};
+  late final previewCache = PreviewImageCache();
+  int _previewGeneration = 0;
   LoadingState<VideoShotData>? videoShot;
   late final RxBool showPreview = false.obs;
   late final showSeekPreview = Pref.showSeekPreview;
@@ -1652,17 +1653,20 @@ class PlPlayerController with BlockConfigMixin {
   }
 
   void _clearPreview() {
+    _previewGeneration++;
     showPreview.value = false;
     previewIndex.value = null;
     videoShot = null;
-    for (final i in previewCache.values) {
-      i?.dispose();
-    }
     previewCache.clear();
   }
 
   Future<void> getVideoShot() async {
-    videoShot = await VideoHttp.videoshot(bvid: bvid, cid: cid!);
+    final generation = _previewGeneration;
+    final requestedCid = cid;
+    final result = await VideoHttp.videoshot(bvid: bvid, cid: requestedCid!);
+    if (generation == _previewGeneration && cid == requestedCid) {
+      videoShot = result;
+    }
   }
 
   Future<void> takeScreenshot() async {

@@ -70,6 +70,17 @@ if [[ "${NEWBILI_OFFLINE:-0}" == "1" ]]; then
 fi
 (cd "$PROJECT_DIR" && "$FLUTTER_BIN" "${pub_get_args[@]}")
 
+# Keep the cache patch tied to the resolved package rather than an arbitrary
+# directory left in the global pub cache by another project.
+image_cache_dir="$(python3 - "$PROJECT_DIR/.dart_tool/package_config.json" <<'PY'
+import json, pathlib, sys, urllib.parse
+config = pathlib.Path(sys.argv[1]).resolve()
+package = next(p for p in json.loads(config.read_text())['packages'] if p['name'] == 'cached_network_image_ce')
+print(pathlib.Path(urllib.parse.unquote(urllib.parse.urlparse(urllib.parse.urljoin(config.as_uri(), package['rootUri'])).path)).parent)
+PY
+)"
+apply_once "$image_cache_dir" "$PROJECT_DIR/lib/scripts/image_cache_budget.patch"
+
 material_ui_dir="$(find "$PUB_CACHE_DIR/hosted/pub.dev" -maxdepth 1 -type d -name 'material_ui-*' | sort | tail -n 1)"
 if [[ -z "$material_ui_dir" ]]; then
   echo "material_ui was not found under $PUB_CACHE_DIR." >&2

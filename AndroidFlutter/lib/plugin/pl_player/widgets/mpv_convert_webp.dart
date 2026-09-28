@@ -21,6 +21,8 @@ class MpvConvertWebp {
   final _completer = Completer<bool>();
 
   bool _success = false;
+  bool _disposed = false;
+  bool _ready = false;
 
   final String url;
   final String outFile;
@@ -55,6 +57,11 @@ class MpvConvertWebp {
         if (enableHA) 'hwdec': '${Pref.hardwareDecoding},auto-copy', // transcode only support copy
       },
     );
+    _ready = true;
+    if (_disposed) {
+      _destroyNative();
+      return;
+    }
     NativePlayer.setHeader(
       _mpv,
       _ctx,
@@ -70,18 +77,27 @@ class MpvConvertWebp {
   }
 
   void dispose() {
+    if (_disposed) return;
+    _disposed = true;
+    if (_ready) _destroyNative();
+    if (!_completer.isCompleted) _completer.complete(false);
+  }
+
+  void _destroyNative() {
+    _ready = false;
     Initializer.dispose(_ctx);
     _mpv.mpv_terminate_destroy(_ctx);
-    if (!_completer.isCompleted) _completer.complete(false);
   }
 
   Future<bool> convert() async {
     await _init();
+    if (_disposed) return false;
     _command(['loadfile', url]);
     return _completer.future;
   }
 
   Future<void>? _onEvent(Pointer<generated.mpv_event> event) {
+    if (_disposed) return null;
     switch (event.ref.event_id) {
       case generated.mpv_event_id.MPV_EVENT_PROPERTY_CHANGE:
         final prop = event.ref.data.cast<generated.mpv_event_property>().ref;
@@ -108,7 +124,7 @@ class MpvConvertWebp {
       case generated.mpv_event_id.MPV_EVENT_END_FILE ||
           generated.mpv_event_id.MPV_EVENT_SHUTDOWN:
         progress?.value = 1;
-        _completer.complete(_success);
+        if (!_completer.isCompleted) _completer.complete(_success);
         dispose();
         break;
     }

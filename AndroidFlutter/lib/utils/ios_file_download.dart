@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:PiliPlus/utils/path_utils.dart';
+import 'package:PiliPlus/utils/cache_manager.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -56,7 +56,7 @@ abstract final class IosFileDownload {
     Directory? temp;
     var downloading = true;
     try {
-      temp = await Directory(tmpDirPath).createTemp('web-download-');
+      temp = await CacheManager.temporary.create('web-download');
       final file = File('${temp.path}/${webDownloadFilename(url, filename)}');
       SmartDialog.showLoading(
         msg: '正在下载文件',
@@ -104,11 +104,7 @@ abstract final class IosFileDownload {
       await SmartDialog.dismiss(status: SmartStatus.loading);
       client.close(force: true);
       _busy = false;
-      try {
-        if (temp != null && temp.existsSync()) {
-          await temp.delete(recursive: true);
-        }
-      } catch (_) {}
+      if (temp != null) await CacheManager.temporary.release(temp);
     }
   }
 }

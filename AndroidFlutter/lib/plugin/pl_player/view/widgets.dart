@@ -138,7 +138,7 @@ class VideoShotImage extends StatefulWidget {
     required this.isMounted,
   });
 
-  final Map<String, ui.Image?> imageCache;
+  final PreviewImageCache imageCache;
   final String url;
   final int x;
   final int y;
@@ -153,11 +153,10 @@ class VideoShotImage extends StatefulWidget {
 }
 
 Future<ui.Image?> _getImg(String url) async {
-  final cacheKey = Utils.getFileName(url, fileExt: false);
   try {
     final fileInfo = await CacheManager.manager.getSingleFile(
       ImageUtils.safeThumbnailUrl(url),
-      key: cacheKey,
+      key: 'video-shot:$url',
       headers: Constants.baseHeaders,
     );
     return await _loadImg(fileInfo.path);
@@ -170,9 +169,11 @@ Future<ui.Image?> _loadImg(String path) async {
   final codec = await ui.instantiateImageCodecFromBuffer(
     await ImmutableBuffer.fromFilePath(path),
   );
-  final frame = await codec.getNextFrame();
-  codec.dispose();
-  return frame.image;
+  try {
+    return (await codec.getNextFrame()).image;
+  } finally {
+    codec.dispose();
+  }
 }
 
 class _VideoShotImageState extends State<VideoShotImage> {
@@ -181,18 +182,13 @@ class _VideoShotImageState extends State<VideoShotImage> {
   late Rect _dstRect;
   late RRect _rrect;
   ui.Image? _image;
+  int _loadGeneration = 0;
 
   @override
   void initState() {
     super.initState();
     _initSize();
     _loadImg();
-  }
-
-  void _initSizeIfNeeded() {
-    if (_size.width.isNaN) {
-      _initSize();
-    }
   }
 
   void _initSize() {
@@ -233,37 +229,47 @@ class _VideoShotImageState extends State<VideoShotImage> {
   }
 
   void _loadImg() {
+    final generation = ++_loadGeneration;
     final url = widget.url;
-    _image = widget.imageCache[url];
-    if (_image != null) {
-      _initSizeIfNeeded();
-    } else if (!widget.imageCache.containsKey(url)) {
-      widget.imageCache[url] = null;
-      _getImg(url).then((image) {
-        if (image != null) {
-          if (widget.isMounted()) {
-            widget.imageCache[url] = image;
-          }
-          if (mounted) {
-            _image = image;
-            _initSizeIfNeeded();
-            setState(() {});
-          }
-        } else {
-          widget.imageCache.remove(url);
-        }
+    final cache = widget.imageCache;
+    _image?.dispose();
+    _image = null;
+    cache.load(url, () => _getImg(url)).then((image) {
+      if (!mounted ||
+          generation != _loadGeneration ||
+          !widget.isMounted() ||
+          widget.url != url ||
+          widget.imageCache != cache) {
+        image?.dispose();
+        return;
+      }
+      setState(() {
+        _image = image;
+        _initSize();
       });
-    }
+    });
+  }
+
+  @override
+  void dispose() {
+    _image?.dispose();
+    super.dispose();
   }
 
   @override
   void didUpdateWidget(VideoShotImage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.url != widget.url) {
+    if (oldWidget.url != widget.url ||
+        oldWidget.imageCache != widget.imageCache) {
       _loadImg();
     }
     if (oldWidget.x != widget.x || oldWidget.y != widget.y) {
       _setSrcRect(widget.imgXSize, widget.imgYSize);
+    }
+    if (oldWidget.height != widget.height ||
+        oldWidget.imgXSize != widget.imgXSize ||
+        oldWidget.imgYSize != widget.imgYSize) {
+      _initSize();
     }
   }
 

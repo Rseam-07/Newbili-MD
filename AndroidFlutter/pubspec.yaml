@@ -49,7 +49,7 @@ dependencies:
     git:
       url: https://github.com/My-Responsitories/flutter_cached_network_image_ce.git
       path: cached_network_image
-      ref: develop
+      ref: dacec4de669b4c52c59576509db069e3194408ac
   canvas_danmaku:
     git:
       url: https://github.com/bggRGjQaUbCoE/canvas_danmaku.git
@@ -227,9 +227,10 @@ dependency_overrides:
     git:
       url: https://github.com/My-Responsitories/flutter_cached_network_image_ce.git
       path: cached_network_image
-      ref: develop
+      ref: dacec4de669b4c52c59576509db069e3194408ac
 
 dev_dependencies:
+  http: ^1.6.0
   flutter_test:
     sdk: flutter
   build_runner: ^2.10.3
