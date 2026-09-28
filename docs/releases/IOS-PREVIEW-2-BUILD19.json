@@ -1,0 +1,51 @@
+{
+  "release": "v1.1.0-ios-preview.2",
+  "date": "2026-09-28",
+  "appCommit": "b3d242b8aec820ac51b00fb6ecdae19ab522c35d",
+  "artifact": {
+    "name": "Newbili-MD-1.1.0-19-iOS-unsigned.ipa",
+    "bytes": 24341519,
+    "sha256": "0a77561edf65a7b3af90417c3702e945250244ca6e37286c1ebd5ee12f96d353",
+    "bundleId": "com.rseam07.newbili.md",
+    "version": "1.1.0",
+    "build": "19",
+    "minimumIOS": "15.0",
+    "deviceFamilies": [
+      1,
+      2
+    ],
+    "architecture": "arm64",
+    "releaseAOT": true,
+    "debugPayloadAbsent": true,
+    "zipIntegrity": "passed",
+    "embeddedCommitVerified": true,
+    "captchaResourcesPresent": true,
+    "captchaLinked": true,
+    "signing": "unsigned; requires user signing"
+  },
+  "environment": {
+    "flutter": "3.47.2",
+    "xcode": "27.0 beta (27A5228h)"
+  },
+  "focusedChecks": {
+    "cacheBudgetAndOwnership": 7,
+    "previewMemoryLifecycle": 3,
+    "cachePageAndMotion": 6,
+    "total": 16,
+    "changedDartAnalysis": "no remaining issues",
+    "patchReproducibility": "fresh apply and reverse/idempotency passed",
+    "ui": [
+      "375dp light",
+      "375dp dark",
+      "375dp 3x text with reduced motion",
+      "1024dp landscape tablet"
+    ]
+  },
+  "priorFixes": "Includes build 18 captcha, creator invitation, author/action layout and dynamics icon fixes. Earlier native validation is recorded in IOS-PREVIEW-2.json; those live login flows were not repeated for build 19.",
+  "remaining": [
+    "Physical-device login and authenticated actions",
+    "Physical-device long-running playback, background behavior and cache measurements",
+    "Android APK not rebuilt for this release",
+    "System iOS picture in picture and native background downloads remain unimplemented"
+  ]
+}
