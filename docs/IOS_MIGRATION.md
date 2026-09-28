@@ -6,7 +6,7 @@
 
 - iOS 15 及以上，独立包名 `com.rseam07.newbili.md`，可与原生 Newbili 共存。
 - 提供 **Release / ARM64 未签名 IPA**，需要使用自己的有效证书和匹配的描述文件签名后安装；不是 App Store / TestFlight 安装包。不要直接安装模拟器 `.app`。
-- 预览包和说明：[iOS 迁移预览](https://github.com/Rseam-07/Newbili-MD/releases/tag/v1.1.0-ios-preview.1)。
+- 预览包和说明：[Android 与 iOS 同步更新 · Build 19](https://github.com/Rseam-07/Newbili-MD/releases/tag/v1.1.0-build.19)。
 
 ## 本轮修复
 

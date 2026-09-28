@@ -1,0 +1,157 @@
+{
+  "release": "v1.1.0-build.19",
+  "date": "2026-09-28",
+  "version": "1.1.0",
+  "build": 19,
+  "sharedDartTree": "870e6948878e571e7444f4357123c63f1e6219f2",
+  "android": {
+    "appCommit": "bcc7645830f71158a58bce62ecd9d8222350b1b3",
+    "packageName": "com.rseam07.newbili",
+    "minSdk": 31,
+    "targetSdk": 37,
+    "signerSha256": "4876a7a04d24c8a89e82ca355a8f3fc404019d076af5aae2f5faaac32b5d6cdb",
+    "artifacts": [
+      {
+        "abi": "arm64-v8a",
+        "name": "Newbili-MD-1.1.0-19-arm64-v8a.apk",
+        "bytes": 25564396,
+        "sha256": "414d6c1d4cb3b6cfc9197ce9c8fded3c4bfec04ccfefbfc406f5441912188b6c",
+        "url": "https://rseam-07.github.io/downloads/files/Newbili-MD-1.1.0-19-arm64-v8a.apk",
+        "githubUrl": "https://github.com/Rseam-07/Newbili-MD/releases/download/v1.1.0-build.19/Newbili-MD-1.1.0-19-arm64-v8a.apk",
+        "zipIntegrity": "passed",
+        "embeddedBuildCommitVerified": true,
+        "nativeLibraryCount": 7,
+        "minimumElfLoadAlignment": 16384,
+        "signatureSchemeV2Verified": true,
+        "zipAlignment4Verified": true
+      },
+      {
+        "abi": "armeabi-v7a",
+        "name": "Newbili-MD-1.1.0-19-armeabi-v7a.apk",
+        "bytes": 25470202,
+        "sha256": "3c51f3572034b0337e73a89b32d9b6cc816894698a2190b489a9be47515dd80c",
+        "url": "https://rseam-07.github.io/downloads/files/Newbili-MD-1.1.0-19-armeabi-v7a.apk",
+        "githubUrl": "https://github.com/Rseam-07/Newbili-MD/releases/download/v1.1.0-build.19/Newbili-MD-1.1.0-19-armeabi-v7a.apk",
+        "zipIntegrity": "passed",
+        "embeddedBuildCommitVerified": true,
+        "nativeLibraryCount": 7,
+        "minimumElfLoadAlignment": 16384,
+        "signatureSchemeV2Verified": true,
+        "zipAlignment4Verified": true
+      },
+      {
+        "abi": "x86_64",
+        "name": "Newbili-MD-1.1.0-19-x86_64.apk",
+        "bytes": 26485975,
+        "sha256": "72ffad5de5667ac3c3d305a9b6af311d3f9253e07fb0c1c9af64a926dd3e640f",
+        "url": "https://rseam-07.github.io/downloads/files/Newbili-MD-1.1.0-19-x86_64.apk",
+        "githubUrl": "https://github.com/Rseam-07/Newbili-MD/releases/download/v1.1.0-build.19/Newbili-MD-1.1.0-19-x86_64.apk",
+        "zipIntegrity": "passed",
+        "embeddedBuildCommitVerified": true,
+        "nativeLibraryCount": 7,
+        "minimumElfLoadAlignment": 16384,
+        "signatureSchemeV2Verified": true,
+        "zipAlignment4Verified": true
+      }
+    ],
+    "runtime": {
+      "device": "Android 12 API 31 ARM64 emulator (SwiftShader)",
+      "upgradeFromBuild": 17,
+      "upgradeToBuild": 19,
+      "onboardingStatePreserved": true,
+      "recommendationsLoaded": true,
+      "cachePageOpened": true,
+      "initialImageLimit": "256 MB",
+      "beforeClear": "742.8 KB",
+      "afterClear": "3.0 KB",
+      "selectedImageLimit": "128 MB",
+      "limitPersistedAfterProcessRestart": true,
+      "androidRuntimeFatalErrors": 0,
+      "graphicsNote": "Emulator EGL initialization emits Error: Success (12288) on both old and new builds; app renders and the flow completes."
+    }
+  },
+  "ios": {
+    "appCommit": "b3d242b8aec820ac51b00fb6ecdae19ab522c35d",
+    "artifact": {
+      "name": "Newbili-MD-1.1.0-19-iOS-unsigned.ipa",
+      "bytes": 24341519,
+      "sha256": "0a77561edf65a7b3af90417c3702e945250244ca6e37286c1ebd5ee12f96d353",
+      "bundleId": "com.rseam07.newbili.md",
+      "version": "1.1.0",
+      "build": "19",
+      "minimumIOS": "15.0",
+      "deviceFamilies": [
+        1,
+        2
+      ],
+      "architecture": "arm64",
+      "releaseAOT": true,
+      "debugPayloadAbsent": true,
+      "zipIntegrity": "passed",
+      "embeddedCommitVerified": true,
+      "captchaResourcesPresent": true,
+      "captchaLinked": true,
+      "signing": "unsigned; requires user signing"
+    },
+    "reusedVerifiedBuild19": true
+  },
+  "focusedChecks": {
+    "cacheBudgetAndOwnership": 7,
+    "previewMemoryLifecycle": 3,
+    "cachePageAndMotion": 6,
+    "total": 16,
+    "changedDartAnalysis": "no remaining issues",
+    "patchReproducibility": "fresh apply and reverse/idempotency passed",
+    "ui": [
+      "375dp light",
+      "375dp dark",
+      "375dp 3x text with reduced motion",
+      "1024dp landscape tablet"
+    ],
+    "reusedWithoutRepeat": true
+  },
+  "publishing": {
+    "githubPackageDigestsMatched": true,
+    "websiteDownloads": [
+      {
+        "name": "Newbili-MD-1.1.0-19-arm64-v8a.apk",
+        "http": 200,
+        "bytes": 25564396,
+        "sha256Matched": true,
+        "direct": true,
+        "contentType": "application/vnd.android.package-archive"
+      },
+      {
+        "name": "Newbili-MD-1.1.0-19-armeabi-v7a.apk",
+        "http": 200,
+        "bytes": 25470202,
+        "sha256Matched": true,
+        "direct": true,
+        "contentType": "application/vnd.android.package-archive"
+      },
+      {
+        "name": "Newbili-MD-1.1.0-19-x86_64.apk",
+        "http": 200,
+        "bytes": 26485975,
+        "sha256Matched": true,
+        "direct": true,
+        "contentType": "application/vnd.android.package-archive"
+      }
+    ],
+    "websiteDeployment": {
+      "runId": 36385726569,
+      "commit": "8723e93ad78eb2c8d1e74cf9d0a530b6886e4894",
+      "result": "success"
+    },
+    "websiteBuild19VisuallyVerified": true,
+    "iosDirectDownloadCheck": "Reused same-day Build 19 full-download hash verification; URL and bytes unchanged",
+    "verifiedAt": "2026-09-28T06:19:44.467031+00:00"
+  },
+  "remaining": [
+    "Physical-device login and authenticated actions",
+    "Physical-device long-running playback, background behavior and cache measurements",
+    "Physical foldable validation",
+    "Mainland China network coverage; no domestic CDN",
+    "iOS system picture in picture and native background downloads remain unimplemented"
+  ]
+}
