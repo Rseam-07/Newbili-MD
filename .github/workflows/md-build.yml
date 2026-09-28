@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [AndroidFlutter/**, Scripts/prepare-android-flutter.sh, .github/workflows/md-build.yml]
+    paths: [AndroidFlutter/**, Scripts/prepare-android-flutter.sh, Scripts/build-md-ios.sh, .github/workflows/md-build.yml]
 permissions:
   contents: read
 concurrency:
@@ -28,7 +28,7 @@ jobs:
         working-directory: AndroidFlutter
         run: |
           flutter analyze --no-pub --no-fatal-infos
-          flutter test --no-pub test/utils/retry_interceptor_test.dart test/utils/update_version_test.dart test/widgets/material_motion_test.dart test/widgets/md_adaptive_regression_test.dart test/widgets/tablet_player_stage_test.dart test/widgets/onboarding_test.dart
+          flutter test --no-pub test/utils/retry_interceptor_test.dart test/utils/update_version_test.dart test/widgets/material_motion_test.dart test/widgets/md_adaptive_regression_test.dart test/widgets/tablet_player_stage_test.dart test/widgets/onboarding_test.dart test/utils/cache_budget_test.dart test/utils/preview_image_cache_test.dart test/widgets/cache_motion_test.dart
   android:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -52,8 +52,29 @@ jobs:
         working-directory: AndroidFlutter
         env: {GRADLE_OPTS: '-Dorg.gradle.project.newbiliDebugReleaseSigning=true'}
         run: |
-          flutter build apk --release --split-per-abi --no-pub --dart-define=pili.name=1.1.0 --dart-define=pili.code=17 --dart-define="pili.hash=$(git rev-parse --short=12 HEAD)" --dart-define="pili.time=$(date +%s)"
+          version="$(sed -n 's/^version: //p' pubspec.yaml | head -n 1)"
+          flutter build apk --release --split-per-abi --no-pub --build-name="${version%+*}" --build-number="${version##*+}" --dart-define="pili.name=${version%+*}" --dart-define="pili.code=${version##*+}" --dart-define="pili.hash=$(git rev-parse --short=12 HEAD)" --dart-define="pili.time=$(date +%s)"
       - uses: actions/upload-artifact@v7
         with:
           name: Newbili-MD-Android-candidates
           path: AndroidFlutter/build/app/outputs/flutter-apk/app-*-release.apk
+  ios:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    needs: checks
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with: {flutter-version: 3.47.2, channel: stable, cache: true}
+      - name: Prepare shared app and CocoaPods integration
+        env: {FLUTTER_BIN: '${{ env.FLUTTER_ROOT }}/bin/flutter'}
+        run: |
+          flutter config --no-enable-swift-package-manager
+          Scripts/prepare-android-flutter.sh
+      - name: Build unsigned iOS candidate with the shared version
+        env: {FLUTTER_BIN: '${{ env.FLUTTER_ROOT }}/bin/flutter'}
+        run: Scripts/build-md-ios.sh unsigned
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Newbili-MD-iOS-candidate
+          path: dist/Newbili-MD-*-iOS-unsigned.ipa

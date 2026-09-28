@@ -17,7 +17,7 @@ Cloudflare 发布：在 Website 中执行 `npx wrangler deploy`。使用当前�
 - APK 存放在 Pages 镜像仓库的 `downloads/files/`，不放进 Cloudflare 静态目录（单文件限额不同）。两个官网的下载按钮都指向 Pages 直链。
 - 暂未使用国内 CDN，不能承诺中国大陆全部网络可达。
 
-发布流程：先用 `Scripts/package-android-apk.sh` 验证并签名安装包；再执行 `python3 Scripts/update-website-release.py --date YYYY-MM-DD`。脚本从实际文件生成版本、大小、SHA-256、静态下载页与 `releases.json`，任一文件缺失会停止。`--pending` 仅用于本地设计预览，不得作为正式下载页发布。
+发布流程：先用 `Scripts/package-android-apk.sh` 验证并签名三份 APK，并用 `Scripts/build-md-ios.sh unsigned` 生成同版本 IPA；再执行 `python3 Scripts/update-website-release.py --date YYYY-MM-DD`。脚本从实际文件生成版本、大小、SHA-256、静态下载页与 `releases.json`，任一平台文件缺失或 IPA 内部版本不匹配会停止。默认发布标签为 `v版本-build.构建号`，可用 `--tag` 指定已有标签。两端版本统一读取 `AndroidFlutter/pubspec.yaml`，详见 `docs/RELEASE_POLICY.md`。`--pending` 仅用于本地设计预览，不得作为正式下载页发布。
 
 同步 `Website/dist/` 到 Pages 镜像仓库（保留其 `.git` 和 `downloads/files`），把对应 APK 与校验清单放入 `downloads/files/` 后提交。页面更新不应触发 Android 构建。Cloudflare 在 Website 目录用当前账户执行 `wrangler deploy`。
 

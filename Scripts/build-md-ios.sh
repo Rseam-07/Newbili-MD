@@ -27,9 +27,8 @@ if [[ -n "${MD_IOS_BUILD_DIR:-}" ]]; then
 fi
 
 VERSION="$(sed -n 's/^version: //p' "$APP_DIR/pubspec.yaml" | head -n 1)"
-IOS_BUILD_NUMBER="$(tr -d '[:space:]' < "$APP_DIR/ios/build-number.txt")"
+IOS_BUILD_NUMBER="${VERSION##*+}"
 [[ "$IOS_BUILD_NUMBER" =~ ^[0-9]+$ ]] || { echo "Invalid iOS build number" >&2; exit 1; }
-VERSION="${VERSION%%+*}+$IOS_BUILD_NUMBER"
 ARGS=(--no-pub "--target=$TARGET" "--build-name=${VERSION%%+*}" "--build-number=$IOS_BUILD_NUMBER" "--dart-define=pili.name=${VERSION%%+*}"
   "--dart-define=pili.code=${VERSION##*+}" "--dart-define=pili.hash=$(git -C "$ROOT_DIR" rev-parse --short=12 HEAD)"
   "--dart-define=pili.time=$(date +%s)")
