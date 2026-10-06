@@ -838,7 +838,13 @@ abstract final class VideoHttp {
     String subtitleUrl, {
     SubtitleFormat format = .vtt,
   }) async {
-    final res = await Request().get("https:$subtitleUrl");
+    final uri = Uri.parse(
+      subtitleUrl.startsWith('//') ? 'https:$subtitleUrl' : subtitleUrl,
+    );
+    if ((uri.scheme != 'http' && uri.scheme != 'https') || uri.host.isEmpty) {
+      throw const FormatException('无效的字幕地址');
+    }
+    final res = await Request().get(uri.replace(scheme: 'https').toString());
     if (res.data?['body'] case List list) {
       switch (format) {
         case .json:

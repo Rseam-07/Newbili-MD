@@ -689,6 +689,15 @@ class HeaderControlState extends State<HeaderControl>
                       leading: const Icon(Icons.subtitles_outlined, size: 20),
                       title: const Text('字幕设置', style: titleStyle),
                     ),
+                    if (videoDetailCtr.subtitles.isNotEmpty)
+                      ListTile(
+                        onTap: () {
+                          Get.back();
+                          videoDetailCtr.showSubtitlePicker(context);
+                        },
+                        leading: const Icon(Icons.translate_rounded, size: 20),
+                        title: const Text('字幕语言与双语字幕', style: titleStyle),
+                      ),
                     ListTile(
                       dense: false,
                       onTap: () async {

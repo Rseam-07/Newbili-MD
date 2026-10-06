@@ -727,7 +727,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                   ...videoDetailController.subtitles.mapIndexed((i, e) {
                     return PopupMenuItem<int>(
                       value: i + 1,
-                      height: 35,
+                      height: 48,
                       onTap: () => videoDetailController.setSubtitle(i + 1),
                       child: Text(
                         e.lanDoc ?? e.lan,
@@ -737,19 +737,42 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                       ),
                     );
                   }),
+                  const PopupMenuDivider(),
+                  PopupMenuItem<int>(
+                    value: -2,
+                    height: 48,
+                    onTap: () =>
+                        videoDetailController.showSubtitlePicker(this.context),
+                    child: Text(
+                      videoDetailController.secondarySubtitleIndex.value > 0
+                          ? '双语字幕 · 已开启'
+                          : '双语字幕…',
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                  ),
                 ];
               },
               child: SizedBox(
                 width: widgetWidth,
                 height: expanded ? 48 : 30,
-                child: val == 0
+                child: videoDetailController.subtitleLoading.value
+                    ? const Center(
+                        child: SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        ),
+                      )
+                    : val <= 0
                     ? const Icon(
                         Icons.closed_caption_off_outlined,
                         size: 22,
                         color: Colors.white,
                       )
                     : const Icon(
-                        Icons.closed_caption_off_rounded,
+                        Icons.closed_caption_rounded,
                         size: 22,
                         color: Colors.white,
                       ),

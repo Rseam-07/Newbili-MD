@@ -1,4 +1,5 @@
 import 'package:PiliPlus/router/newbili_page_route.dart';
+import 'package:PiliPlus/pages/about/view.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:PiliPlus/pages/article/view.dart';
 import 'package:PiliPlus/pages/article_list/view.dart';
@@ -102,6 +103,7 @@ class Routes {
     GetPage(name: '/webview', page: () => const WebviewPage()),
     // 设置
     GetPage(name: '/setting', page: () => const SettingPage()),
+    GetPage(name: '/about', page: () => const AboutPage()),
     //
     GetPage(name: '/fav', page: () => const FavPage()),
     //

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert' show ascii;
+import 'dart:io' show File;
 import 'dart:math' show min;
 import 'dart:ui';
 
@@ -50,6 +51,7 @@ import 'package:PiliPlus/pages/video/note/view.dart';
 import 'package:PiliPlus/pages/video/post_panel/view.dart';
 import 'package:PiliPlus/pages/video/send_danmaku/view.dart';
 import 'package:PiliPlus/pages/video/widgets/header_control.dart';
+import 'package:PiliPlus/pages/video/widgets/subtitle_language_dialog.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_source.dart';
 import 'package:PiliPlus/plugin/pl_player/models/heart_beat_type.dart';
@@ -68,6 +70,7 @@ import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/theme_utils.dart';
+import 'package:PiliPlus/utils/subtitle_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:PiliPlus/utils/video_utils.dart';
 import 'package:collection/collection.dart';
@@ -76,7 +79,7 @@ import 'package:canvas_danmaku/models/danmaku_content_item.dart';
 import 'package:dio/dio.dart' show Options;
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart'
     show ExtendedNestedScrollViewState;
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show compute, kDebugMode;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:get/get.dart';
@@ -1119,40 +1122,150 @@ class VideoDetailController extends GetxController
   late final showVP = true.obs;
   late final viewPointList = <ViewPointSegment>[].obs;
 
-  // 设定字幕轨道
-  Future<void> setSubtitle(int index) async {
-    if (index <= 0) {
-      await plPlayerController.videoPlayerController?.setSubtitleTrack(.no());
-      vttSubtitlesIndex.value = index;
-      return;
-    }
+  final secondarySubtitleIndex = 0.obs;
+  final subtitleLoading = false.obs;
+  int _subtitleEpoch = 0;
+  int _subtitleRequest = 0;
+  final Map<int, Future<({bool isData, String id})?>> _subtitleFetches = {};
+  ({int primary, int secondary, String data})? _combinedSubtitle;
 
-    Future<void> setSub(({bool isData, String id}) subtitle) async {
-      final sub = subtitles[index - 1];
-
-      String subUri = subtitle.id;
-      if (subtitle.isData) {
-        subUri = 'memory://$subUri';
+  Future<({bool isData, String id})?> _loadSubtitle(int index, int epoch) {
+    final key = index - 1;
+    if (vttSubtitles[key] case final cached?) return Future.value(cached);
+    final url = subtitles[key].subtitleUrl;
+    if (url == null || url.isEmpty) return Future.value(null);
+    return _subtitleFetches.putIfAbsent(key, () async {
+      try {
+        final data = await VideoHttp.getSubtitles(url);
+        if (data == null || isClosed || epoch != _subtitleEpoch) return null;
+        final subtitle = (isData: true, id: data);
+        vttSubtitles[key] = subtitle;
+        return subtitle;
+      } finally {
+        if (epoch == _subtitleEpoch) _subtitleFetches.remove(key);
       }
-      await plPlayerController.videoPlayerController?.setSubtitleTrack(
-        SubtitleTrack(subUri, sub.lanDoc, sub.lan, uri: true),
-      );
-      vttSubtitlesIndex.value = index;
-    }
+    });
+  }
 
-    var subtitle = vttSubtitles[index - 1];
-    if (subtitle == null) {
-      final result = await VideoHttp.getSubtitles(
-        subtitles[index - 1].subtitleUrl!,
-      );
-      if (!isClosed && result != null) {
-        subtitle = (isData: true, id: result);
-        vttSubtitles[index - 1] = subtitle;
+  Future<String> _subtitleText(({bool isData, String id}) track) async {
+    if (track.isData) return track.id;
+    final file = File(track.id);
+    if (await file.length() > 4 * 1024 * 1024) {
+      throw const FormatException('字幕文件过大，请使用较小的 VTT/SRT 文件');
+    }
+    return file.readAsString();
+  }
+
+  /// A second supplied language is optional. Existing single-track and local
+  /// subtitles retain their behavior; no translation service is required.
+  Future<void> setSubtitle(int index, {int? secondaryIndex}) async {
+    if (isClosed || index > subtitles.length) return;
+    final request = ++_subtitleRequest;
+    final epoch = _subtitleEpoch;
+    final videoCid = cid.value;
+    final player = plPlayerController.videoPlayerController;
+    bool current() =>
+        !isClosed &&
+        epoch == _subtitleEpoch &&
+        request == _subtitleRequest &&
+        videoCid == cid.value &&
+        identical(player, plPlayerController.videoPlayerController);
+    if (player == null || index > subtitles.length) return;
+    var second = secondaryIndex ?? secondarySubtitleIndex.value;
+    if (index <= 0 ||
+        second == index ||
+        second > subtitles.length ||
+        second < 0) {
+      second = 0;
+    }
+    subtitleLoading.value = true;
+    try {
+      if (index <= 0) {
+        await player.setSubtitleTrack(.no());
       } else {
-        return;
+        final tracks = await Future.wait([
+          _loadSubtitle(index, epoch),
+          if (second > 0) _loadSubtitle(second, epoch),
+        ]);
+        if (!current()) return;
+        if (tracks.any((track) => track == null)) {
+          throw const FormatException('字幕暂时无法加载，请重试');
+        }
+        final primary = subtitles[index - 1];
+        var track = tracks.first!;
+        if (second > 0) {
+          final cached = _combinedSubtitle;
+          String data;
+          if (cached != null &&
+              cached.primary == index &&
+              cached.secondary == second) {
+            data = cached.data;
+          } else {
+            final text = await Future.wait(
+              tracks.map((track) => _subtitleText(track!)),
+            );
+            if (!current()) return;
+            data = await compute(SubtitleUtils.combineVtt, (
+              primary: text[0],
+              secondary: text[1],
+            ));
+            if (!current()) return;
+            // Retain only the active combination, avoiding quadratic cache growth.
+            _combinedSubtitle = (primary: index, secondary: second, data: data);
+          }
+          track = (isData: true, id: data);
+        }
+        if (!current()) return;
+        await player.setSubtitleTrack(
+          SubtitleTrack(
+            track.isData ? 'memory://${track.id}' : track.id,
+            second > 0
+                ? '${primary.lanDoc ?? primary.lan} / ${subtitles[second - 1].lanDoc ?? subtitles[second - 1].lan}'
+                : primary.lanDoc,
+            primary.lan,
+            uri: true,
+          ),
+        );
       }
+      if (!current()) return;
+      vttSubtitlesIndex.value = index;
+      secondarySubtitleIndex.value = second;
+    } catch (error) {
+      if (current()) {
+        SmartDialog.showToast(
+          error is FormatException ? error.message : '字幕加载失败，请重试',
+        );
+      }
+    } finally {
+      if (current()) subtitleLoading.value = false;
     }
-    await setSub(subtitle);
+  }
+
+  void _resetSubtitleSession() {
+    _subtitleEpoch++;
+    _subtitleRequest++;
+    _subtitleFetches.clear();
+    _combinedSubtitle = null;
+    secondarySubtitleIndex.value = 0;
+    subtitleLoading.value = false;
+    vttSubtitles.clear();
+  }
+
+  Future<void> showSubtitlePicker(BuildContext context) {
+    final epoch = _subtitleEpoch;
+    final videoCid = cid.value;
+    return showSubtitleLanguages(
+      context,
+      languages: subtitles.map((track) => track.lanDoc ?? track.lan).toList(),
+      primaryIndex: vttSubtitlesIndex.value,
+      secondaryIndex: secondarySubtitleIndex.value,
+      onApply: (primary, secondary) async {
+        if (isClosed || epoch != _subtitleEpoch || videoCid != cid.value) {
+          return;
+        }
+        await setSubtitle(primary, secondaryIndex: secondary);
+      },
+    );
   }
 
   // interactive video
@@ -1186,7 +1299,9 @@ class VideoDetailController extends GetxController
   late bool continuePlayingPart = Pref.continuePlayingPart;
 
   Future<void> _queryPlayInfo() async {
-    vttSubtitles.clear();
+    _resetSubtitleSession();
+    final epoch = _subtitleEpoch;
+    final videoCid = cid.value;
     vttSubtitlesIndex.value = 0;
     if (plPlayerController.showViewPoints) {
       viewPointList.clear();
@@ -1197,6 +1312,7 @@ class VideoDetailController extends GetxController
       seasonId: seasonId,
       epId: epId,
     );
+    if (isClosed || epoch != _subtitleEpoch || videoCid != cid.value) return;
     if (res case Success(:final response)) {
       // interactive video
       late final introCtr = Get.find<UgcIntroController>(tag: heroTag);
@@ -1244,9 +1360,12 @@ class VideoDetailController extends GetxController
       }
 
       if (response.subtitle?.subtitles case final sub? when (sub.isNotEmpty)) {
-        _setSubtitle(sub);
+        _setSubtitle(sub, epoch);
       } else if (!Accounts.main.isLogin) {
         final res = await DmGrpc.dmView(aid, cid.value);
+        if (isClosed || epoch != _subtitleEpoch || videoCid != cid.value) {
+          return;
+        }
         if (res case Success(:final response)) {
           if (response.hasSubtitle() &&
               response.subtitle.subtitles.isNotEmpty) {
@@ -1265,6 +1384,7 @@ class VideoDetailController extends GetxController
                   )
                   .toList()
                 ..sort(),
+              epoch,
             );
           }
         } else {
@@ -1274,7 +1394,9 @@ class VideoDetailController extends GetxController
     }
   }
 
-  Future<void> _setSubtitle(List<Subtitle> sub) async {
+  Future<void> _setSubtitle(List<Subtitle> sub, int epoch) async {
+    if (isClosed || epoch != _subtitleEpoch) return;
+    final request = _subtitleRequest;
     subtitles.value = sub;
     final idx = switch (Pref.subtitlePreferenceV2) {
       .off => 0,
@@ -1287,6 +1409,8 @@ class VideoDetailController extends GetxController
             ? 1
             : 0,
     };
+    if (isClosed || epoch != _subtitleEpoch || request != _subtitleRequest)
+      return;
     await setSubtitle(idx);
   }
 
@@ -1338,8 +1462,8 @@ class VideoDetailController extends GetxController
     animController
       ?..removeListener(_animListener)
       ..dispose();
+    _resetSubtitleSession();
     subtitles.clear();
-    vttSubtitles.clear();
     super.onClose();
   }
 
@@ -1357,9 +1481,9 @@ class VideoDetailController extends GetxController
     savedDanmaku = null;
 
     // subtitle
+    _resetSubtitleSession();
     subtitles.clear();
     vttSubtitlesIndex.value = -1;
-    vttSubtitles.clear();
 
     if (!isFileSource) {
       // language

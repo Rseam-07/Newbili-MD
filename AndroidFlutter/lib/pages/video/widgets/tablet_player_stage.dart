@@ -3,8 +3,9 @@ import 'dart:ui' show lerpDouble;
 import 'package:PiliPlus/common/layout/newbili_fold_layout.dart';
 
 import 'package:PiliPlus/common/theme/newbili_theme.dart';
-import 'package:PiliPlus/common/widgets/newbili_destination_view.dart';
+import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
 import 'package:PiliPlus/common/widgets/scaffold/mini_scaffold.dart';
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:material_ui/material_ui.dart';
 
 /// One surface grows from its circular entry into a right-hand content card.
@@ -20,6 +21,7 @@ class TabletPlayerStage extends StatefulWidget {
     this.selectedPane,
     this.onPaneChanged,
     this.initialOpen = false,
+    this.isFullScreen = false,
     this.onOpenChanged,
     required this.onSendDanmaku,
     this.sheetKey,
@@ -32,6 +34,7 @@ class TabletPlayerStage extends StatefulWidget {
   final String? selectedPane;
   final ValueChanged<String>? onPaneChanged;
   final bool initialOpen;
+  final bool isFullScreen;
   final ValueChanged<bool>? onOpenChanged;
   final VoidCallback onSendDanmaku;
   final GlobalKey<MiniScaffoldState>? sheetKey;
@@ -40,8 +43,8 @@ class TabletPlayerStage extends StatefulWidget {
 }
 
 class _TabletPlayerStageState extends State<TabletPlayerStage>
-    with SingleTickerProviderStateMixin {
-  String _selected = '简介';
+    with TickerProviderStateMixin {
+  late String _selected = widget.selectedPane ?? '简介';
   late bool _open = widget.initialOpen;
   late bool _visited = _open;
   late final _expansion = AnimationController(
@@ -49,6 +52,77 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
     value: _open ? 1 : 0,
     duration: NewbiliMotion.container,
   );
+  late TabController _tabs;
+
+  List<String> get _names => [
+    '简介',
+    if (widget.secondary != null) '评论',
+    if (widget.extraPane != null) '动态',
+    if (widget.playlist != null) '选集',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _createTabs();
+    if (widget.isFullScreen) _expansion.value = 0;
+  }
+
+  void _createTabs() {
+    final names = _names;
+    final index = names.indexOf(widget.selectedPane ?? _selected);
+    _tabs = TabController(
+      length: names.length,
+      initialIndex: index < 0 ? 0 : index,
+      vsync: this,
+    )..addListener(_onTabChanged);
+  }
+
+  void _onTabChanged() {
+    if (_tabs.indexIsChanging || _tabs.offset.abs() > .001) return;
+    final name = _names[_tabs.index];
+    if (_selected == name) return;
+    setState(() => _selected = name);
+    widget.onPaneChanged?.call(name);
+  }
+
+  void _animateExpansion() {
+    final target = _open && !widget.isFullScreen ? 1.0 : 0.0;
+    if (NewbiliMotion.reduced(context)) {
+      _expansion.value = target;
+    } else {
+      _expansion.animateTo(
+        target,
+        duration: target == 1 ? NewbiliMotion.container : NewbiliMotion.exit,
+        curve: NewbiliMotion.emphasized,
+      );
+    }
+  }
+
+  @override
+  void didUpdateWidget(TabletPlayerStage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldNames = [
+      '简介',
+      if (oldWidget.secondary != null) '评论',
+      if (oldWidget.extraPane != null) '动态',
+      if (oldWidget.playlist != null) '选集',
+    ];
+    if (!listEquals(oldNames, _names)) {
+      _tabs.removeListener(_onTabChanged);
+      _tabs.dispose();
+      _createTabs();
+    } else if (widget.selectedPane != null) {
+      final index = _names.indexOf(widget.selectedPane!);
+      if (index >= 0 && index != _tabs.index) {
+        _tabs.animateTo(
+          index,
+          duration: NewbiliMotion.duration(context, NewbiliMotion.container),
+        );
+      }
+    }
+    if (oldWidget.isFullScreen != widget.isFullScreen) _animateExpansion();
+  }
 
   void _toggle() {
     setState(() {
@@ -56,31 +130,22 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
       _visited = true;
     });
     widget.onOpenChanged?.call(_open);
-    if (NewbiliMotion.reduced(context)) {
-      _expansion.value = _open ? 1 : 0;
-    } else {
-      _expansion.animateTo(
-        _open ? 1 : 0,
-        duration: _open ? NewbiliMotion.container : NewbiliMotion.exit,
-        curve: NewbiliMotion.emphasized,
-      );
-    }
-  }
-
-  void _select(String name) {
-    setState(() => _selected = name);
-    widget.onPaneChanged?.call(name);
+    _animateExpansion();
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (NewbiliMotion.reduced(context)) _expansion.value = _open ? 1 : 0;
+    if (NewbiliMotion.reduced(context)) {
+      _expansion.value = _open && !widget.isFullScreen ? 1 : 0;
+    }
   }
 
   @override
   void dispose() {
     _expansion.dispose();
+    _tabs.removeListener(_onTabChanged);
+    _tabs.dispose();
     super.dispose();
   }
 
@@ -93,13 +158,10 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
       if (widget.extraPane != null) '动态': widget.extraPane!,
       if (widget.playlist != null) '选集': widget.playlist!,
     };
-    final names = panes.keys.toList();
-    final selected = names.indexOf(widget.selectedPane ?? _selected);
-    final index = selected < 0 ? 0 : selected;
     return PopScope(
-      canPop: !_open,
+      canPop: widget.isFullScreen || !_open,
       onPopInvokedWithResult: (didPop, _) {
-        if (didPop || !_open) return;
+        if (didPop || !_open || widget.isFullScreen) return;
         // Reply details use local history inside the card. Close that level
         // before collapsing the card or leaving the playing video.
         if (ModalRoute.of(context)?.willHandlePopInternally ?? false) {
@@ -109,7 +171,7 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
         }
       },
       child: Material(
-        color: colors.surface,
+        color: widget.isFullScreen ? Colors.black : colors.surface,
         child: LayoutBuilder(
           builder: (context, box) {
             final layout = NewbiliFoldLayout.resolve(
@@ -129,7 +191,7 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
                     Positioned.fromRect(
                       // A single player element survives animation and folding.
                       rect: Rect.lerp(
-                        layout.folded
+                        layout.folded && !widget.isFullScreen
                             ? layout.player
                             : Offset.zero & box.biggest,
                         layout.player,
@@ -147,51 +209,57 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
                     ),
                     Positioned.fromRect(
                       rect: bounds,
-                      child: Material(
-                        key: const ValueKey('tablet-content-surface'),
-                        color: Color.lerp(
-                          colors.secondaryContainer,
-                          colors.surfaceContainerLow,
-                          t,
-                        ),
-                        elevation: lerpDouble(4, 1, t)!,
-                        shadowColor: colors.shadow.withValues(alpha: .24),
-                        borderRadius: BorderRadius.circular(
-                          lerpDouble(28, 20, t)!,
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            if (_visited)
-                              IgnorePointer(
-                                ignoring: !_open || t < .99,
-                                child: ExcludeSemantics(
-                                  excluding: !_open || t < .99,
-                                  child: Opacity(
-                                    opacity: contentOpacity,
-                                    child: OverflowBox(
-                                      alignment: Alignment.topRight,
-                                      minWidth: card.width,
-                                      maxWidth: card.width,
-                                      minHeight: card.height,
-                                      maxHeight: card.height,
-                                      child: MediaQuery(
-                                        data: MediaQuery.of(context).copyWith(
-                                          size: card.size,
-                                          padding: EdgeInsets.zero,
-                                          viewPadding: EdgeInsets.zero,
-                                        ),
-                                        child: ExcludeFocus(
-                                          excluding: !_open,
-                                          child: TickerMode(
-                                            enabled: _open,
-                                            child: MiniScaffold(
-                                              key: widget.sheetKey,
-                                              body: _cardContent(
-                                                context,
-                                                panes,
-                                                index,
+                      child: Offstage(
+                        offstage: widget.isFullScreen && t == 0,
+                        child: IgnorePointer(
+                          ignoring: widget.isFullScreen,
+                          child: Material(
+                            key: const ValueKey('tablet-content-surface'),
+                            color: Color.lerp(
+                              colors.secondaryContainer,
+                              colors.surfaceContainerLow,
+                              t,
+                            ),
+                            elevation: lerpDouble(4, 1, t)!,
+                            shadowColor: colors.shadow.withValues(alpha: .24),
+                            borderRadius: BorderRadius.circular(
+                              lerpDouble(28, 20, t)!,
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                if (_visited)
+                                  IgnorePointer(
+                                    ignoring: !_open || t < .99,
+                                    child: ExcludeSemantics(
+                                      excluding: !_open || t < .99,
+                                      child: Opacity(
+                                        opacity: contentOpacity,
+                                        child: OverflowBox(
+                                          alignment: Alignment.topRight,
+                                          minWidth: card.width,
+                                          maxWidth: card.width,
+                                          minHeight: card.height,
+                                          maxHeight: card.height,
+                                          child: MediaQuery(
+                                            data: MediaQuery.of(context)
+                                                .copyWith(
+                                                  size: card.size,
+                                                  padding: EdgeInsets.zero,
+                                                  viewPadding: EdgeInsets.zero,
+                                                ),
+                                            child: ExcludeFocus(
+                                              excluding: !_open,
+                                              child: TickerMode(
+                                                enabled: _open,
+                                                child: MiniScaffold(
+                                                  key: widget.sheetKey,
+                                                  body: _cardContent(
+                                                    context,
+                                                    panes,
+                                                  ),
+                                                ),
                                               ),
                                             ),
                                           ),
@@ -199,33 +267,34 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
                                       ),
                                     ),
                                   ),
-                                ),
-                              ),
-                            if (t < .35)
-                              IgnorePointer(
-                                ignoring: _open,
-                                child: ExcludeSemantics(
-                                  excluding: _open,
-                                  child: Opacity(
-                                    opacity: (1 - t / .35).clamp(
-                                      0.0,
-                                      1.0,
-                                    ),
-                                    child: Tooltip(
-                                      message: '打开简介、评论与动态',
-                                      child: InkWell(
-                                        onTap: _toggle,
-                                        child: Icon(
-                                          Icons.forum_outlined,
-                                          size: 26,
-                                          color: colors.onSecondaryContainer,
+                                if (t < .35)
+                                  IgnorePointer(
+                                    ignoring: _open,
+                                    child: ExcludeSemantics(
+                                      excluding: _open,
+                                      child: Opacity(
+                                        opacity: (1 - t / .35).clamp(
+                                          0.0,
+                                          1.0,
+                                        ),
+                                        child: Tooltip(
+                                          message: '打开简介、评论与动态',
+                                          child: InkWell(
+                                            onTap: _toggle,
+                                            child: Icon(
+                                              Icons.forum_outlined,
+                                              size: 26,
+                                              color:
+                                                  colors.onSecondaryContainer,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ),
-                          ],
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -242,7 +311,6 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
   Widget _cardContent(
     BuildContext context,
     Map<String, Widget> panes,
-    int index,
   ) {
     final colors = ColorScheme.of(context);
     final names = panes.keys.toList();
@@ -251,50 +319,23 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
         Row(
           children: [
             Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: [
-                    for (var i = 0; i < names.length; i++)
-                      Semantics(
-                        selected: i == index,
-                        button: true,
-                        child: InkWell(
-                          onTap: () => _select(names[i]),
-                          child: Container(
-                            constraints: const BoxConstraints(
-                              minHeight: 52,
-                              minWidth: 64,
-                            ),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              border: Border(
-                                bottom: BorderSide(
-                                  color: i == index
-                                      ? colors.primary
-                                      : Colors.transparent,
-                                  width: 3,
-                                ),
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              names[i],
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: i == index
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
-                                color: i == index
-                                    ? colors.primary
-                                    : colors.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
+              child: TabBar(
+                controller: _tabs,
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                dividerHeight: 0,
+                labelColor: colors.primary,
+                unselectedLabelColor: colors.onSurfaceVariant,
+                labelPadding: const EdgeInsets.symmetric(horizontal: 12),
+                labelStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
                 ),
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                tabs: [for (final name in names) Tab(height: 52, text: name)],
               ),
             ),
             IconButton(
@@ -305,10 +346,12 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
           ],
         ),
         Expanded(
-          child: NewbiliDestinationView(
-            key: ValueKey(names.join('|')),
-            index: index,
-            children: panes.values.toList(),
+          child: TabBarView(
+            controller: _tabs,
+            children: [
+              for (final entry in panes.entries)
+                KeepAliveWrapper(key: ValueKey(entry.key), child: entry.value),
+            ],
           ),
         ),
         Padding(

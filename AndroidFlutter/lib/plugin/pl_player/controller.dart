@@ -494,6 +494,7 @@ class PlPlayerController with BlockConfigMixin {
 
   void _onOrientationChanged(OrientationParams param) {
     _orientation = param.orientation;
+    if (_fsProcessing) return;
     if (Platform.isIOS && !visible) return;
     final orientation = param.orientation;
     final isFullScreen = this.isFullScreen.value;
@@ -1416,6 +1417,10 @@ class PlPlayerController with BlockConfigMixin {
     if (_fsProcessing) return;
     _fsProcessing = true;
     this.isManualFS = isManualFS;
+    // Commit one layout before the platform resizes the viewport. The player
+    // remains mounted while system bars and orientation complete asynchronously.
+    final previous = isFullScreen.value;
+    _setFullScreen(status);
     try {
       if (status) {
         if (PlatformUtils.isMobile) {
@@ -1440,8 +1445,15 @@ class PlPlayerController with BlockConfigMixin {
           await exitDesktopFullScreen();
         }
       }
+    } catch (error) {
+      _setFullScreen(previous);
+      if (kDebugMode) debugPrint('Fullscreen transition failed: $error');
+      if (previous) {
+        hideSystemBar();
+      } else if (!removeSafeArea) {
+        showSystemBar();
+      }
     } finally {
-      _setFullScreen(status);
       _fsProcessing = false;
     }
   }

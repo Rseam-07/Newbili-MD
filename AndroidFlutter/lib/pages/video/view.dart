@@ -780,6 +780,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     () {
       final isFullScreen = this.isFullScreen;
       return SimpleScaffold(
+        backgroundColor: isFullScreen ? Colors.black : null,
         appBar: removeAppBar(isFullScreen)
             ? null
             : SimpleAppBar(
@@ -1338,16 +1339,17 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   bool _tabletPaneOpen = false;
 
   Widget get childWhenTablet => Obx(() {
-    if (isFullScreen) return childWhenDisabledLandscape;
+    final fullscreen = isFullScreen;
     return SimpleScaffold(
-      appBar: removeAppBar(false)
+      backgroundColor: fullscreen ? Colors.black : null,
+      appBar: removeAppBar(fullscreen)
           ? null
           : SimpleAppBar(
               height: padding.top,
               brightness: colorScheme.brightness,
             ),
       body: Padding(
-        padding: padding.copyWith(top: 0),
+        padding: fullscreen ? EdgeInsets.zero : padding.copyWith(top: 0),
         child: MediaQuery(
           data: MediaQuery.of(context).copyWith(
             displayFeatures: [
@@ -1355,8 +1357,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                 DisplayFeature(
                   bounds: feature.bounds.shift(
                     Offset(
-                      -padding.left,
-                      removeAppBar(false) ? 0 : -padding.top,
+                      fullscreen ? 0 : -padding.left,
+                      removeAppBar(fullscreen) ? 0 : -padding.top,
                     ),
                   ),
                   type: feature.type,
@@ -1365,6 +1367,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             ],
           ),
           child: TabletPlayerStage(
+            isFullScreen: fullscreen,
             sheetKey: videoDetailController.childKey,
             selectedPane: _tabletPane,
             initialOpen: _tabletPaneOpen,
@@ -1595,8 +1598,9 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           height: height,
           child: Obx(
             () => NewbiliCoverHero(
-              enabled: videoDetailController.scrollRatio.value <= 0,
-              tag: isFullScreen ? null : coverHeroTag,
+              enabled:
+                  !isFullScreen && videoDetailController.scrollRatio.value <= 0,
+              tag: coverHeroTag,
               radius: isFullScreen ? 0 : heroRadius,
               child: Stack(
                 fit: StackFit.expand,
