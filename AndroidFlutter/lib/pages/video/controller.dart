@@ -1409,8 +1409,9 @@ class VideoDetailController extends GetxController
             ? 1
             : 0,
     };
-    if (isClosed || epoch != _subtitleEpoch || request != _subtitleRequest)
+    if (isClosed || epoch != _subtitleEpoch || request != _subtitleRequest) {
       return;
+    }
     await setSubtitle(idx);
   }
 

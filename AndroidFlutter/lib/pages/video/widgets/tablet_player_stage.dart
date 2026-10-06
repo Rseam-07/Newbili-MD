@@ -252,7 +252,9 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
                                             child: ExcludeFocus(
                                               excluding: !_open,
                                               child: TickerMode(
-                                                enabled: _open,
+                                                enabled:
+                                                    _open &&
+                                                    !widget.isFullScreen,
                                                 child: MiniScaffold(
                                                   key: widget.sheetKey,
                                                   body: _cardContent(

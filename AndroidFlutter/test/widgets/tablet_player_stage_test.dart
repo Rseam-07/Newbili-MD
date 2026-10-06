@@ -67,6 +67,10 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.getRect(find.byKey(surface)), Offset.zero & size);
       expect(find.text('评论内容').hitTestable(), findsNothing);
+      expect(
+        TickerMode.of(tester.element(find.text('评论内容', skipOffstage: false))),
+        isFalse,
+      );
       await tester.tap(find.text('playing 36'));
       await tester.pump();
       // Reverse partway through the transition, preserving the current surface.
