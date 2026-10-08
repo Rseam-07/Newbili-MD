@@ -1,43 +1,43 @@
 {
   "version": "1.2.0",
-  "build": 22,
+  "build": 23,
   "date": "2026-10-08",
-  "tag": "v1.2.0-build.22",
+  "tag": "v1.2.0-build.23",
   "channel": "preview",
   "minAndroid": "12",
   "ready": true,
   "assets": [
     {
       "abi": "arm64-v8a",
-      "name": "Newbili-MD-1.2.0-22-arm64-v8a.apk",
+      "name": "Newbili-MD-1.2.0-23-arm64-v8a.apk",
       "bytes": 25593068,
-      "sha256": "bdf46ea6c046c0cb0d45389951a727b54674941057f3b2b0fdfad44960deb6f3",
-      "url": "https://rseam-07.github.io/downloads/files/Newbili-MD-1.2.0-22-arm64-v8a.apk",
-      "githubUrl": "https://github.com/Rseam-07/Newbili-MD/releases/download/v1.2.0-build.22/Newbili-MD-1.2.0-22-arm64-v8a.apk"
+      "sha256": "7b1ff04ce167f600f5d76c5854d361b61fbc995fd02a05805b40b45c2157d735",
+      "url": "https://rseam-07.github.io/downloads/files/Newbili-MD-1.2.0-23-arm64-v8a.apk",
+      "githubUrl": "https://github.com/Rseam-07/Newbili-MD/releases/download/v1.2.0-build.23/Newbili-MD-1.2.0-23-arm64-v8a.apk"
     },
     {
       "abi": "armeabi-v7a",
-      "name": "Newbili-MD-1.2.0-22-armeabi-v7a.apk",
+      "name": "Newbili-MD-1.2.0-23-armeabi-v7a.apk",
       "bytes": 25502970,
-      "sha256": "f4d03df3f9e5e1f4c5d3fd29f5f65cf2b2ce4f59b323cc1852074a86fe7aa89c",
-      "url": "https://rseam-07.github.io/downloads/files/Newbili-MD-1.2.0-22-armeabi-v7a.apk",
-      "githubUrl": "https://github.com/Rseam-07/Newbili-MD/releases/download/v1.2.0-build.22/Newbili-MD-1.2.0-22-armeabi-v7a.apk"
+      "sha256": "33ad65b133daa7ebf6f58de813b39b4a4f8614bb8591c993793aaad232263432",
+      "url": "https://rseam-07.github.io/downloads/files/Newbili-MD-1.2.0-23-armeabi-v7a.apk",
+      "githubUrl": "https://github.com/Rseam-07/Newbili-MD/releases/download/v1.2.0-build.23/Newbili-MD-1.2.0-23-armeabi-v7a.apk"
     },
     {
       "abi": "x86_64",
-      "name": "Newbili-MD-1.2.0-22-x86_64.apk",
+      "name": "Newbili-MD-1.2.0-23-x86_64.apk",
       "bytes": 26514647,
-      "sha256": "c69b3310252d3eff2bd7bbc3ae00421fe4c232631f614440ce3c19e3886315b1",
-      "url": "https://rseam-07.github.io/downloads/files/Newbili-MD-1.2.0-22-x86_64.apk",
-      "githubUrl": "https://github.com/Rseam-07/Newbili-MD/releases/download/v1.2.0-build.22/Newbili-MD-1.2.0-22-x86_64.apk"
+      "sha256": "4e6004d053b9aa041f470662874a8be377f17577a7b237cafd2768656d07d47a",
+      "url": "https://rseam-07.github.io/downloads/files/Newbili-MD-1.2.0-23-x86_64.apk",
+      "githubUrl": "https://github.com/Rseam-07/Newbili-MD/releases/download/v1.2.0-build.23/Newbili-MD-1.2.0-23-x86_64.apk"
     }
   ],
   "ios": {
-    "name": "Newbili-MD-1.2.0-22-iOS-unsigned.ipa",
-    "bytes": 24394591,
-    "sha256": "a8b1edc1657dc8b732d0f04f943cab4981b6568dfe9cdbf613a167d9ada062ea",
-    "url": "https://rseam-07.github.io/downloads/files/Newbili-MD-1.2.0-22-iOS-unsigned.ipa",
-    "githubUrl": "https://github.com/Rseam-07/Newbili-MD/releases/download/v1.2.0-build.22/Newbili-MD-1.2.0-22-iOS-unsigned.ipa",
+    "name": "Newbili-MD-1.2.0-23-iOS-unsigned.ipa",
+    "bytes": 24395548,
+    "sha256": "fb72a3e9bce1d55443db6fd962a80076684c1fd92adda39e44404d8bb7cde698",
+    "url": "https://rseam-07.github.io/downloads/files/Newbili-MD-1.2.0-23-iOS-unsigned.ipa",
+    "githubUrl": "https://github.com/Rseam-07/Newbili-MD/releases/download/v1.2.0-build.23/Newbili-MD-1.2.0-23-iOS-unsigned.ipa",
     "requiresSigning": true,
     "minIOS": "15.0"
   }
