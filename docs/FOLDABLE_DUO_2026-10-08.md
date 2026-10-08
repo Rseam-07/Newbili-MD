@@ -1,4 +1,4 @@
-# 折叠屏适配 · 1.2.0 / Build 23
+# 折叠屏适配 · 1.2.0 / Build 24
 
 Android 与 iOS / iPadOS 继续共用 MD 应用。以可调整大小的窗口和系统提供的区域为依据，覆盖外屏、展开、书本式半折、桌面观看、系统分屏和画中画挤压窗口后的布局。
 
@@ -17,9 +17,9 @@ Android 与 iOS / iPadOS 继续共用 MD 应用。以可调整大小的窗口和
 
 苹果的公开设计规范说明：外屏为 compact width，内屏为 regular width；适配应依据窗口、size class、安全区域和 reserved regions，不能只按某款手机的分辨率或固定宽度判断。系统分屏与多实例场景是不同能力，本轮支持与其他 App 分屏使用，未启用多个独立 Newbili 引擎实例。
 
-公开的 `UIView.reservedRegions`、`UIHingeInteraction` 和 `UITraitCollection.verticalBarEdge` 从 **iOS 27.1** 提供。本机为 **Xcode 27.0 / iOS SDK 27.0**，也没有 Duo 模拟器。因此本次发布 IPA **没有启用自动铰链识别、Duo 原生竖向栏边缘信号**，可用部分是动态窗口／size class、安全区、内外屏连续布局和手动桌面观看。不得将这个包宣称为已经通过 Duo 真机验收。
+公开的 `UIView.reservedRegions`、`UIHingeInteraction` 和 `UITraitCollection.verticalBarEdge` 从 **iOS 27.1** 提供。Build 22 / 23 使用 SDK 27.0，只包含动态窗口和手动桌面布局。Build 24 使用已校验 Apple 签名的 **Xcode 27.1 RC（27A9275）/ SDK 27.1**，公开 API 编译检查已通过，启用原生区域、铰链通知与竖向导航栏边缘桥接。Duo 27.1 模拟器运行环境另行下载；原生姿态行为与真机播放、功耗、帧时间仍需设备验收。
 
-`Scripts/configure-duo-sdk.sh` 在 SDK 27.1 或以上时用 Swift 编译器验证公开声明，成功才生成本机构建标志，启用 `SceneDelegate.swift` 中的原生桥接；声明不匹配时构建失败，避免静默发布不可用的识别功能。该分支已按公开文档实现，当前机器无法完成其编译及真机验证。
+`Scripts/configure-duo-sdk.sh` 在 SDK 27.1 或以上时用 Swift 编译器验证公开声明，成功才生成本机构建标志，启用 `SceneDelegate.swift` 中的原生桥接；声明不匹配时构建失败，避免静默发布不可用的识别功能。`NEWBILI_REQUIRE_DUO_SDK=1` 另外禁止旧 SDK 降级构建。SDK 安装和构建方法见 `DUO_SDK_SETUP.md`，实际安装包编译结果记录于发布附件。
 
 桥接读取当前 scene 的 Flutter view，而非 `UIScreen.main`；合并一轮布局通知，并去掉相同快照。Flutter 接受与当前窗口一致的区域数据，拒绝尺寸尚未同步的旧快照，尤其避免比例相同的内外屏转换错误。UI 缩放在应用现有 MediaQuery 层统一处理。
 
@@ -30,7 +30,7 @@ Android 与 iOS / iPadOS 继续共用 MD 应用。以可调整大小的窗口和
 - 新增折叠几何、旧快照拒绝、懒加载网格避让测试。
 - 交互覆盖外屏→内屏→书本→桌面→全屏→窄分屏，断言播放器 State、评论选项、滚动位置和交互状态保留；同时覆盖手动桌面布局、大字体、安全区及左右边缘导航。
 - 复用并验证原有平板标签滑动、全屏中途反向、评论详情返回顺序。
-- 只运行以上受影响测试；两端原生编译、包身份、签名、启动与在线下载结果另记于发布附件。Duo 自动识别和真机播放／功耗／120Hz 帧时间仍待新 SDK 和设备验收。
+- 只运行以上受影响测试；两端原生编译、包身份、签名、启动与在线下载结果另记于发布附件。Build 24 复用 11 项已经通过且源码未变的共享检查；新增 SDK / 原生分支编译与包内链接检查。Duo 姿态行为和真机播放／功耗／120Hz 帧时间仍待设备验收。
 
 ## 依据
 

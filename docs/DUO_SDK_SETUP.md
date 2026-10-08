@@ -27,3 +27,5 @@ xcrun simctl list devicetypes
 ```
 
 不额外导出运行环境副本，避免重复占用磁盘。SDK 编译、Duo 模拟器姿态验证和真机验收分别记录；模拟器通过不能替代真机播放连续性、功耗和帧时间验收。
+
+发布下载页使用 `python3 Scripts/update-website-release.py --require-native-duo`，要求 IPA 二进制包含铰链、区域和边缘导航的原生链接。下载清单记录实际 SDK 和桥接启用状态；降级包不会被标为已启用原生能力。
