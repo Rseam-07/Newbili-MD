@@ -29,6 +29,11 @@ SWIFT
   printf '%s\n' 'SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) NEWBILI_DUO_SDK' > "$OUTPUT"
   echo "Duo native regions: enabled (SDK $SDK_VERSION, public API probe passed)"
 else
+  if [[ "${NEWBILI_REQUIRE_DUO_SDK:-0}" == 1 ]]; then
+    echo "Duo native APIs require iOS SDK 27.1 or later; selected SDK is $SDK_VERSION." >&2
+    echo "Set DEVELOPER_DIR to the Xcode 27.1 installation before building." >&2
+    exit 1
+  fi
   printf '%s\n' '// Native Duo APIs require iOS SDK 27.1; responsive geometry and manual tabletop remain enabled.' > "$OUTPUT"
   echo "Duo native regions: unavailable in SDK $SDK_VERSION; using responsive/manual fallback"
 fi

@@ -7,6 +7,12 @@ FLUTTER_BIN="${FLUTTER_BIN:-$(command -v flutter)}"
 MODE="${1:-simulator}"
 TARGET="${MD_IOS_TARGET:-lib/main.dart}"
 
+# Prefer the separately installed Duo toolchain for this project. An explicit
+# DEVELOPER_DIR still wins; other projects retain the global Xcode selection.
+if [[ -z "${DEVELOPER_DIR:-}" && -d /Applications/Xcode-27.1-RC.app/Contents/Developer ]]; then
+  export DEVELOPER_DIR=/Applications/Xcode-27.1-RC.app/Contents/Developer
+fi
+
 if [[ "$MODE" != simulator && "$MODE" != unsigned ]]; then
   echo "Usage: $0 [simulator|unsigned]" >&2
   exit 2
