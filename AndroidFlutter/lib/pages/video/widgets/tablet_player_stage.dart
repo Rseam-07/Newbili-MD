@@ -315,9 +315,12 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
                                                         !widget.isFullScreen,
                                                     child: MiniScaffold(
                                                       key: widget.sheetKey,
-                                                      body: _cardContent(
-                                                        context,
-                                                        panes,
+                                                      body: Builder(
+                                                        builder: (context) =>
+                                                            _cardContent(
+                                                              context,
+                                                              panes,
+                                                            ),
                                                       ),
                                                     ),
                                                   ),

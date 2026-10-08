@@ -11,6 +11,48 @@ import 'package:material_ui/material_ui.dart';
 
 void main() {
   testWidgets(
+    'short tabletop pane keeps comments usable and the send action in its header',
+    (tester) async {
+      const size = Size(890, 540);
+      await tester.binding.setSurfaceSize(size);
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      var sent = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(size: size),
+            child: Scaffold(
+              body: TabletPlayerStage(
+                initialOpen: true,
+                selectedPane: '评论',
+                playerBuilder: (_, _) => const Text('保留的播放器'),
+                details: const Text('简介内容'),
+                secondary: const SingleChildScrollView(child: Text('评论内容可用')),
+                transport: const Text('桌面播放控制'),
+                onSendDanmaku: () => sent++,
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('观看布局'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.widgetWithText(
+          CheckedPopupMenuItem<NewbiliPlayerArrangement>,
+          '桌面观看',
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('评论内容可用').hitTestable(), findsOneWidget);
+      expect(find.text('发弹幕'), findsNothing);
+      await tester.tap(find.byTooltip('发弹幕'));
+      expect(sent, 1);
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets(
     'scene host retains navigation through a zero-sized display transfer',
     (tester) async {
       final page = GlobalKey();
