@@ -1,6 +1,7 @@
 import 'dart:ui' show DisplayFeature;
 
-import 'package:PiliPlus/common/layout/newbili_fold_layout.dart';
+import 'package:PiliPlus/common/layout/newbili_adaptive_window.dart';
+import 'package:PiliPlus/pages/video/widgets/foldable_playback_dock.dart';
 import 'package:PiliPlus/pages/dynamics_tab/view.dart';
 import 'package:PiliPlus/models/common/dynamic/dynamics_type.dart';
 import 'package:PiliPlus/utils/recommendation_history.dart';
@@ -1298,21 +1299,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     Widget child;
     if (videoDetailController.plPlayerController.isPipMode) {
       child = plPlayer(width: maxWidth, height: maxHeight, isPipMode: true);
-    } else if ((maxWidth >= 840 && maxHeight >= 600) ||
-        NewbiliFoldLayout.separatingFeature(
-              Size(maxWidth, maxHeight),
-              MediaQuery.of(context).displayFeatures,
-            ) !=
-            null) {
-      child = childWhenTablet;
-    } else if (!videoDetailController.horizontalScreen) {
-      child = childWhenDisabled;
-    } else if (maxWidth / maxHeight >= kScreenRatio) {
-      child = childWhenDisabledLandscape;
-    } else if (maxWidth / Style.aspectRatio16x9 < 0.4 * maxHeight) {
-      child = childWhenDisabled;
     } else {
-      child = childWhenDisabledAlmostSquare;
+      // One stage survives cover/inner-display and Split View changes. Keeping
+      // separate phone/tablet widget trees lost the active detail pane on fold.
+      child = adaptivePlayerPage;
     }
     if (videoDetailController.plPlayerController.keyboardControl) {
       child = PlayerFocus(
@@ -1338,7 +1328,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   String _tabletPane = '简介';
   bool _tabletPaneOpen = false;
 
-  Widget get childWhenTablet => Obx(() {
+  Widget get adaptivePlayerPage => Obx(() {
     final fullscreen = isFullScreen;
     return SimpleScaffold(
       backgroundColor: fullscreen ? Colors.black : null,
@@ -1367,6 +1357,18 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             ],
           ),
           child: TabletPlayerStage(
+            compact: !NewbiliWindowScope.expanded(
+              context,
+              Size(maxWidth, maxHeight),
+            ),
+            videoAspectRatio: videoDetailController.isVertical.value
+                ? 9 / 16
+                : 16 / 9,
+            transport: FoldablePlaybackDock(
+              controller: videoDetailController.plPlayerController,
+              onSubtitles: () =>
+                  videoDetailController.showSubtitlePicker(context),
+            ),
             isFullScreen: fullscreen,
             sheetKey: videoDetailController.childKey,
             selectedPane: _tabletPane,

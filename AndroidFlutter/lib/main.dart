@@ -4,6 +4,9 @@ import 'package:PiliPlus/common/theme/newbili_theme.dart';
 
 import 'dart:io';
 
+import 'package:PiliPlus/common/layout/newbili_adaptive_window.dart';
+import 'package:PiliPlus/plugin/pl_player/controller.dart';
+
 import 'package:PiliPlus/services/update_notification_service.dart';
 
 import 'package:PiliPlus/build_config.dart';
@@ -159,8 +162,12 @@ Future<void> main() async {
 
   if (PlatformUtils.isMobile) {
     if (Platform.isAndroid) MaxScreenSize.init();
+    await NewbiliWindowController.initialize();
     await Future.wait([
-      if (Pref.horizontalScreen) ?fullMode() else ?portraitUpMode(),
+      if (Pref.horizontalScreen || NewbiliWindowController.freeRotation)
+        ?fullMode()
+      else
+        ?portraitUpMode(),
       setupServiceLocator(),
     ]);
   } else if (Platform.isWindows) {
@@ -340,7 +347,14 @@ class MyApp extends StatelessWidget {
         notifyStyle: const FlutterSmartNotifyStyle(
           warningBuilder: NotifyWarning.new,
         ),
-        builder: _builder,
+        builder: (context, child) => NewbiliAdaptiveWindow(
+          onRotationUnlocked: () {
+            if (!(PlPlayerController.instance?.isFullScreen.value ?? false)) {
+              fullMode();
+            }
+          },
+          child: Builder(builder: (context) => _builder(context, child)),
+        ),
       ),
       navigatorObservers: [
         routeObserver,

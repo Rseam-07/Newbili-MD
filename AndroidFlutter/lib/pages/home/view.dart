@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/layout/newbili_adaptive_window.dart';
 import 'package:PiliPlus/common/theme/newbili_theme.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
@@ -68,8 +69,12 @@ class _HomePageState extends CommonPageState<HomePage>
     }
     return Column(
       children: [
-        if (MediaQuery.sizeOf(context).width < 840) ...[
-          customAppBar(),
+        if (!NewbiliWindowScope.expanded(context) ||
+            NewbiliWindowScope.of(context).controlEdge !=
+                NewbiliControlEdge.bottom) ...[
+          if (NewbiliWindowScope.of(context).controlEdge ==
+              NewbiliControlEdge.bottom)
+            customAppBar(),
           tabBar,
         ],
         Expanded(

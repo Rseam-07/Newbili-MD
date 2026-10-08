@@ -157,3 +157,117 @@ class NewbiliNavigationBar extends StatelessWidget {
     );
   }
 }
+
+/// Duo places navigation on the reachable outer edge. It scrolls when system
+/// chrome, the keyboard or large type leaves less vertical room.
+class NewbiliEdgeNavigationBar extends StatelessWidget {
+  const NewbiliEdgeNavigationBar({
+    super.key,
+    required this.destinations,
+    required this.selectedIndex,
+    required this.onDestinationSelected,
+    this.header,
+  });
+  static const width = 80.0;
+  final List<NavigationDestination> destinations;
+  final int selectedIndex;
+  final ValueChanged<int> onDestinationSelected;
+  final Widget? header;
+  @override
+  Widget build(BuildContext context) {
+    final colors = ColorScheme.of(context);
+    return Material(
+      color: colors.surfaceContainerLow,
+      child: SafeArea(
+        child: SizedBox(
+          width: width,
+          child: LayoutBuilder(
+            builder: (context, box) => SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: box.maxHeight),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    if (header != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: header!,
+                      ),
+                    for (var i = 0; i < destinations.length; i++)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        child: Semantics(
+                          selected: i == selectedIndex,
+                          button: true,
+                          label: destinations[i].label,
+                          child: Tooltip(
+                            message: destinations[i].label,
+                            child: InkWell(
+                              key: ValueKey('edge-destination-$i'),
+                              borderRadius: BorderRadius.circular(20),
+                              onTap: () => onDestinationSelected(i),
+                              child: AnimatedContainer(
+                                duration: NewbiliMotion.duration(
+                                  context,
+                                  NewbiliMotion.container,
+                                ),
+                                curve: NewbiliMotion.emphasized,
+                                constraints: const BoxConstraints(
+                                  minHeight: 56,
+                                  minWidth: 48,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                  horizontal: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  color: i == selectedIndex
+                                      ? colors.secondaryContainer
+                                      : Colors.transparent,
+                                ),
+                                child: ExcludeSemantics(
+                                  child: Column(
+                                    children: [
+                                      IconTheme(
+                                        data: IconThemeData(
+                                          size: 24,
+                                          color: i == selectedIndex
+                                              ? colors.onSecondaryContainer
+                                              : colors.onSurfaceVariant,
+                                        ),
+                                        child: i == selectedIndex
+                                            ? destinations[i].selectedIcon ??
+                                                  destinations[i].icon
+                                            : destinations[i].icon,
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        destinations[i].label,
+                                        textAlign: TextAlign.center,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -33,6 +33,7 @@ ARGS=(--no-pub "--target=$TARGET" "--build-name=${VERSION%%+*}" "--build-number=
   "--dart-define=pili.code=${VERSION##*+}" "--dart-define=pili.hash=$(git -C "$ROOT_DIR" rev-parse --short=12 HEAD)"
   "--dart-define=pili.time=$(date +%s)")
 cd "$APP_DIR"
+bash "$ROOT_DIR/Scripts/configure-duo-sdk.sh"
 if [[ "$MODE" == simulator ]]; then
   # Keep ad-hoc signing enabled: media_kit's embedded libraries must be signed
   # even on the simulator, or dyld terminates the app before Dart starts.

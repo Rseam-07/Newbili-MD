@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/layout/newbili_player_posture.dart';
 import 'package:PiliPlus/plugin/pl_player/models/pinch_fullscreen.dart';
 import 'package:PiliPlus/utils/preview_image_cache.dart';
 
@@ -1807,6 +1808,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             child: Obx(
               () {
                 final showControls = plPlayerController.showControls.value;
+                // Tabletop has one complete transport on the lower surface.
+                // Keep advanced overlay controls, but avoid a second thin bar.
+                if (NewbiliPlayerPosture.tabletopOf(context)) {
+                  return const SizedBox.shrink();
+                }
                 final bool offstage;
                 switch (plPlayerController.progressType) {
                   case .alwaysShow:

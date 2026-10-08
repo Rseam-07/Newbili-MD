@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:PiliPlus/common/layout/newbili_adaptive_window.dart';
+
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/widgets/newbili_navigation_bar.dart';
@@ -94,7 +96,9 @@ class _MainAppState extends PopScopeState<MainApp>
         windowManager.setBrightness(brightness);
       }
     }
-    _mainController.useBottomNav = MediaQuery.sizeOf(context).width < 840;
+    _mainController.useBottomNav =
+        !NewbiliWindowScope.expanded(context) &&
+        NewbiliWindowScope.of(context).controlEdge == NewbiliControlEdge.bottom;
   }
 
   @override
@@ -351,7 +355,9 @@ class _MainAppState extends PopScopeState<MainApp>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
-    final wide = size.width >= 840;
+    final wide = NewbiliWindowScope.expanded(context);
+    final edge = NewbiliWindowScope.of(context).controlEdge;
+    final edgeNavigation = edge != NewbiliControlEdge.bottom;
     final homeIndex = _mainController.navigationBars.indexOf(
       NavigationBarType.home,
     );
@@ -384,8 +390,32 @@ class _MainAppState extends PopScopeState<MainApp>
       // Tablets keep the navigation in the same top canvas as the logo and
       // search. A fixed rail made the content look like a phone beside a
       // black strip and also stole width from the recommendation stage.
-      sideBar: null,
-      bottomNav: wide
+      trailingSideBar: edge == NewbiliControlEdge.trailing,
+      sideBar: !edgeNavigation
+          ? null
+          : Obx(
+              () => NewbiliEdgeNavigationBar(
+                header: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const NewbiliWordmark(compact: true),
+                    const SizedBox(height: 8),
+                    msgBadge(_mainController),
+                  ],
+                ),
+                destinations: [
+                  for (final e in _mainController.navigationBars)
+                    NavigationDestination(
+                      label: e.label,
+                      icon: _buildIcon(type: e),
+                      selectedIcon: _buildIcon(type: e, selected: true),
+                    ),
+                ],
+                selectedIndex: _mainController.selectedIndex.value,
+                onDestinationSelected: _mainController.setIndex,
+              ),
+            ),
+      bottomNav: wide || edgeNavigation
           ? null
           : MediaQuery.removePadding(
               context: context,
@@ -395,13 +425,13 @@ class _MainAppState extends PopScopeState<MainApp>
       body: Padding(
         padding: EdgeInsets.only(
           top: _padding.top,
-          left: _padding.left,
-          right: _padding.right,
+          left: edge == NewbiliControlEdge.leading ? 0 : _padding.left,
+          right: edge == NewbiliControlEdge.trailing ? 0 : _padding.right,
           bottom: wide ? _padding.bottom : 0,
         ),
         child: Column(
           children: [
-            if (wide)
+            if (wide && !edgeNavigation)
               Obx(
                 () => NewbiliTabletToolbar(
                   sections: homeIndex < 0
@@ -452,7 +482,7 @@ class _MainAppState extends PopScopeState<MainApp>
                   ),
                 ),
               ),
-            Expanded(child: child),
+            Expanded(key: const ValueKey('main-destinations'), child: child),
           ],
         ),
       ),

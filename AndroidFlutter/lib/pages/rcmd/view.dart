@@ -1,6 +1,11 @@
 import 'package:PiliPlus/common/skeleton/video_card_v.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
+
+import 'dart:ui' show DisplayFeatureType;
+
+import 'package:PiliPlus/common/layout/newbili_adaptive_window.dart';
+import 'package:PiliPlus/common/layout/newbili_fold_grid.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/newbili_navigation_bar.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -34,7 +39,7 @@ class _RcmdPageState extends State<RcmdPage>
     final colorScheme = ColorScheme.of(context);
     return Container(
       margin: EdgeInsets.symmetric(
-        horizontal: MediaQuery.sizeOf(context).width >= 840 ? 0 : 16,
+        horizontal: NewbiliWindowScope.expanded(context) ? 0 : 16,
       ),
 
       child: refreshIndicator(
@@ -63,9 +68,9 @@ class _RcmdPageState extends State<RcmdPage>
                 return SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(
-                      MediaQuery.sizeOf(context).width >= 840 ? 24 : 0,
+                      NewbiliWindowScope.expanded(context) ? 24 : 0,
                       12,
-                      MediaQuery.sizeOf(context).width >= 840 ? 24 : 0,
+                      NewbiliWindowScope.expanded(context) ? 24 : 0,
                       0,
                     ),
                     child: Material(
@@ -108,13 +113,13 @@ class _RcmdPageState extends State<RcmdPage>
     );
   }
 
-  late SliverGridDelegateWithExtentAndRatio gridDelegate;
+  late SliverGridDelegate gridDelegate;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final wide = MediaQuery.sizeOf(context).width >= 840;
-    gridDelegate = SliverGridDelegateWithExtentAndRatio(
+    final wide = NewbiliWindowScope.expanded(context);
+    final base = SliverGridDelegateWithExtentAndRatio(
       mainAxisSpacing: wide ? 24 : 20,
       crossAxisSpacing: wide ? 16 : 12,
       maxCrossAxisExtent: MediaQuery.textScalerOf(context).scale(14) > 20
@@ -122,6 +127,29 @@ class _RcmdPageState extends State<RcmdPage>
           : Pref.recommendCardWidth,
       childAspectRatio: Style.aspectRatio,
       mainAxisExtent: VideoCardV.metadataHeightOf(context),
+    );
+    final media = MediaQuery.of(context);
+    Rect? hinge;
+    for (final feature in media.displayFeatures) {
+      if ((feature.type == DisplayFeatureType.hinge ||
+              feature.type == DisplayFeatureType.fold) &&
+          feature.bounds.height >= media.size.height * .75) {
+        final edge = NewbiliWindowScope.of(context).controlEdge;
+        final leftInset = edge == NewbiliControlEdge.leading
+            ? NewbiliEdgeNavigationBar.width + media.viewPadding.left
+            : media.viewPadding.left;
+        hinge = feature.bounds.shift(Offset(-leftInset - (wide ? 24 : 16), 0));
+        break;
+      }
+    }
+    gridDelegate = NewbiliFoldGridDelegate(
+      base: base,
+      hinge: hinge,
+      maxExtent: base.maxCrossAxisExtent,
+      spacing: base.crossAxisSpacing,
+      rowSpacing: base.mainAxisSpacing,
+      aspectRatio: base.childAspectRatio,
+      metadataHeight: base.mainAxisExtent,
     );
   }
 
@@ -143,7 +171,7 @@ class _RcmdPageState extends State<RcmdPage>
   }
 
   Widget _buildRecommendations(List<BaseRcmdVideoItemModel> response) {
-    final wide = MediaQuery.sizeOf(context).width >= 840;
+    final wide = NewbiliWindowScope.expanded(context);
     const featuredCount = 0;
     final gridCount = response.length - featuredCount;
     final markerIndex = controller.lastRefreshAt == null
@@ -226,7 +254,7 @@ class _RcmdPageState extends State<RcmdPage>
 
   Widget get _buildSkeleton => SliverPadding(
     padding: EdgeInsets.symmetric(
-      horizontal: MediaQuery.sizeOf(context).width >= 840 ? 24 : 0,
+      horizontal: NewbiliWindowScope.expanded(context) ? 24 : 0,
     ),
     sliver: SliverGrid(
       gridDelegate: gridDelegate,

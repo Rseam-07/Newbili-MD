@@ -1,5 +1,7 @@
 import 'dart:async' show StreamSubscription, Timer;
 
+import 'package:PiliPlus/common/layout/newbili_adaptive_window.dart';
+
 import 'package:PiliPlus/models/common/video/background_playback_mode.dart';
 import 'package:PiliPlus/utils/preview_image_cache.dart';
 
@@ -496,6 +498,9 @@ class PlPlayerController with BlockConfigMixin {
     _orientation = param.orientation;
     if (_fsProcessing) return;
     if (Platform.isIOS && !visible) return;
+    // Foldable scenes already rotate through system geometry. Sensor-driven
+    // orientation requests fight hinge/scene changes and can flash fullscreen.
+    if (NewbiliWindowController.isFoldable) return;
     final orientation = param.orientation;
     final isFullScreen = this.isFullScreen.value;
     if (checkIsAutoRotate &&
@@ -1369,13 +1374,19 @@ class PlPlayerController with BlockConfigMixin {
   double screenRatio = 0.0;
   bool isManualFS = true;
   late final FullScreenMode mode = Pref.fullScreenMode;
-  late final horizontalScreen = Pref.horizontalScreen;
+  // A folded phone preference must not lock its expanded display into portrait
+  // or turn a resize into an automatic fullscreen/orientation round-trip.
+  bool get horizontalScreen =>
+      Pref.horizontalScreen || NewbiliWindowController.freeRotation;
   late final removeSafeArea = Pref.removeSafeArea;
 
   Future<void>? changeOrientation({
     required bool isVertical,
     DeviceOrientation? orientation,
   }) {
+    if (NewbiliWindowController.isFoldable && orientation == null) {
+      return fullMode();
+    }
     if (orientation == null && (mode == .none || mode == .gravity)) {
       return null;
     }

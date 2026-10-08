@@ -1,0 +1,2 @@
+// Generated flags remain local to the build machine; older SDKs use the fallback.
+#include? "NewbiliDuo.generated.xcconfig"

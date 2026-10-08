@@ -11,11 +11,13 @@ class MainLayout
     required this.sideBar,
     required this.bottomNav,
     required this.body,
+    this.trailingSideBar = false,
   });
 
   final Widget? sideBar;
   final Widget? bottomNav;
   final Widget body;
+  final bool trailingSideBar;
 
   @override
   Iterable<MainType> get slots => MainType.values;
@@ -31,7 +33,16 @@ class MainLayout
   SlottedContainerRenderObjectMixin<MainType, RenderBox> createRenderObject(
     BuildContext context,
   ) {
-    return _RenderMainLayout();
+    return _RenderMainLayout()..trailingSideBar = trailingSideBar;
+  }
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    covariant SlottedContainerRenderObjectMixin<MainType, RenderBox>
+    renderObject,
+  ) {
+    (renderObject as _RenderMainLayout).trailingSideBar = trailingSideBar;
   }
 }
 
@@ -42,6 +53,12 @@ class _RenderMainLayout extends RenderBox
   RenderBox? get sideBar => childForSlot(.sideBar);
   RenderBox? get bottomNav => childForSlot(.bottomNav);
   RenderBox get body => childForSlot(.body)!;
+  bool _trailingSideBar = false;
+  set trailingSideBar(bool value) {
+    if (_trailingSideBar == value) return;
+    _trailingSideBar = value;
+    markNeedsLayout();
+  }
 
   @override
   Iterable<MainType> get slots => MainType.values;
@@ -60,9 +77,12 @@ class _RenderMainLayout extends RenderBox
         sideBar,
         BoxConstraints.tightFor(height: constraints.maxHeight),
       ).width;
-      setOffset(sideBar, .zero);
+      setOffset(
+        sideBar,
+        Offset(_trailingSideBar ? size.width - sideBarWidth : 0, 0),
+      );
 
-      bodyOffset = Offset(sideBarWidth, 0);
+      bodyOffset = Offset(_trailingSideBar ? 0 : sideBarWidth, 0);
       bodyConstraints = BoxConstraints.tightFor(
         width: constraints.maxWidth - sideBarWidth,
         height: constraints.maxHeight,

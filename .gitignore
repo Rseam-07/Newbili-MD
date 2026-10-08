@@ -106,3 +106,5 @@ Website/node_modules/
 AndroidFlutter/ios/Runner/GeneratedPluginRegistrant.*
 AndroidFlutter/ios/Flutter/*.framework/
 AndroidFlutter/ios/Flutter/*.podspec
+# Host-specific public API compilation flags.
+AndroidFlutter/ios/Flutter/NewbiliDuo.generated.xcconfig
