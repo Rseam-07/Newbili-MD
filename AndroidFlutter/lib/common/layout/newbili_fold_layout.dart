@@ -64,6 +64,7 @@ class NewbiliFoldLayout {
     }
     final feature = separatingFeature(size, features);
     late final Rect player, pane;
+    var bookTransport = Rect.zero;
     final horizontalFold =
         feature != null && feature.bounds.width >= size.width * .75;
     final tabletop =
@@ -78,7 +79,25 @@ class NewbiliFoldLayout {
         (arrangement != NewbiliPlayerArrangement.sideBySide ||
             size.width < 600);
     if (feature != null && !horizontalFold) {
-      player = Rect.fromLTRB(0, 0, feature.bounds.left, size.height);
+      final ratio = videoAspectRatio.isFinite && videoAspectRatio > 0
+          ? videoAspectRatio
+          : 16 / 9;
+      final height = feature.bounds.left / ratio;
+      final dock = hasTransport && ratio > 1 && size.height - height >= 160;
+      player = Rect.fromLTRB(
+        0,
+        0,
+        feature.bounds.left,
+        dock ? height : size.height,
+      );
+      if (dock) {
+        bookTransport = Rect.fromLTRB(
+          0,
+          height + 8,
+          feature.bounds.left,
+          size.height,
+        );
+      }
       pane = Rect.fromLTRB(feature.bounds.right, 0, size.width, size.height);
     } else if (tabletop) {
       final split = feature?.bounds.top ?? size.height * .5;
@@ -142,12 +161,14 @@ class NewbiliFoldLayout {
       folded: feature != null,
       compact: inline,
       tabletop: tabletop,
-      transport: Rect.fromLTWH(
-        pane.left,
-        pane.top,
-        pane.width,
-        transportHeight,
-      ),
+      transport: !bookTransport.isEmpty
+          ? bookTransport
+          : Rect.fromLTWH(
+              pane.left,
+              pane.top,
+              pane.width,
+              transportHeight,
+            ),
     );
   }
 }

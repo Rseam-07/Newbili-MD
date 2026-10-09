@@ -136,13 +136,14 @@ class _RcmdPageState extends State<RcmdPage>
           feature.bounds.height >= media.size.height * .75) {
         final edge = NewbiliWindowScope.of(context).controlEdge;
         final leftInset = edge == NewbiliControlEdge.leading
-            ? NewbiliEdgeNavigationBar.width + media.viewPadding.left
+            ? NewbiliEdgeSurface.extentOf(context)
             : media.viewPadding.left;
         hinge = feature.bounds.shift(Offset(-leftInset - (wide ? 24 : 16), 0));
         break;
       }
     }
     gridDelegate = NewbiliFoldGridDelegate(
+      evenColumns: NewbiliWindowScope.foldable(context),
       base: base,
       hinge: hinge,
       maxExtent: base.maxCrossAxisExtent,
@@ -185,6 +186,7 @@ class _RcmdPageState extends State<RcmdPage>
           SliverToBoxAdapter(
             child: TabletRecommendationStage(
               items: response,
+              dense: NewbiliWindowScope.foldable(context),
               showRecommendations: false,
               onRefresh: controller.onRefresh,
               onLoadMore: controller.onLoadMore,

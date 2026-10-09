@@ -25,6 +25,10 @@ final class MDAdaptiveViewController: FlutterViewController, FlutterStreamHandle
     }
     #if NEWBILI_DUO_SDK
     if #available(iOS 27.1, *) {
+      registerForTraitChanges(UITraitCollection.systemTraitsAffectingVerticalBarEdge) {
+        (controller: MDAdaptiveViewController, _: UITraitCollection) in
+        controller.schedulePublish()
+      }
       view.addInteraction(UIHingeInteraction { [weak self] _, _ in
         // Reserved regions supply layout geometry. The angle is deliberately
         // not used to invent a crease or trigger playback/orientation changes.

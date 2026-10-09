@@ -13,31 +13,43 @@ class NewbiliFoldGridDelegate extends SliverGridDelegate {
     required this.rowSpacing,
     required this.aspectRatio,
     required this.metadataHeight,
+    this.evenColumns = false,
   });
   final SliverGridDelegate base;
   final Rect? hinge;
   final double maxExtent, spacing, rowSpacing, aspectRatio, metadataHeight;
+  final bool evenColumns;
 
   @override
   SliverGridLayout getLayout(SliverConstraints constraints) {
     final fold = hinge;
     final width = constraints.crossAxisExtent;
     if (fold == null || fold.left < 140 || fold.right > width - 140) {
+      if (evenColumns && width >= 560) {
+        final preferred = math.max(2, (width / (maxExtent + spacing)).ceil());
+        final count = preferred.isEven ? preferred : preferred + 1;
+        final tile = (width - (count - 1) * spacing) / count;
+        return SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: count,
+          crossAxisSpacing: spacing,
+          mainAxisSpacing: rowSpacing,
+          mainAxisExtent: tile / aspectRatio + metadataHeight,
+        ).getLayout(constraints);
+      }
       return base.getLayout(constraints);
     }
     final leftWidth = fold.left - spacing;
     final rightWidth = width - fold.right - spacing;
     final leftCount = math.max(1, (leftWidth / (maxExtent + spacing)).ceil());
     final rightCount = math.max(1, (rightWidth / (maxExtent + spacing)).ceil());
-    final tile = math.min(
-      (leftWidth - (leftCount - 1) * spacing) / leftCount,
-      (rightWidth - (rightCount - 1) * spacing) / rightCount,
-    );
+    final leftTile = (leftWidth - (leftCount - 1) * spacing) / leftCount;
+    final rightTile = (rightWidth - (rightCount - 1) * spacing) / rightCount;
     return _FoldGridLayout(
       leftCount: leftCount,
       rightCount: rightCount,
-      tileWidth: tile,
-      tileHeight: tile / aspectRatio + metadataHeight,
+      leftTile: leftTile,
+      rightTile: rightTile,
+      tileHeight: math.max(leftTile, rightTile) / aspectRatio + metadataHeight,
       spacing: spacing,
       rowSpacing: rowSpacing,
       rightStart: fold.right + spacing,
@@ -49,6 +61,7 @@ class NewbiliFoldGridDelegate extends SliverGridDelegate {
   @override
   bool shouldRelayout(NewbiliFoldGridDelegate oldDelegate) =>
       hinge != oldDelegate.hinge ||
+      evenColumns != oldDelegate.evenColumns ||
       maxExtent != oldDelegate.maxExtent ||
       spacing != oldDelegate.spacing ||
       rowSpacing != oldDelegate.rowSpacing ||
@@ -61,7 +74,8 @@ class _FoldGridLayout extends SliverGridLayout {
   const _FoldGridLayout({
     required this.leftCount,
     required this.rightCount,
-    required this.tileWidth,
+    required this.leftTile,
+    required this.rightTile,
     required this.tileHeight,
     required this.spacing,
     required this.rowSpacing,
@@ -70,7 +84,13 @@ class _FoldGridLayout extends SliverGridLayout {
     required this.reverse,
   });
   final int leftCount, rightCount;
-  final double tileWidth, tileHeight, spacing, rowSpacing, rightStart, width;
+  final double leftTile,
+      rightTile,
+      tileHeight,
+      spacing,
+      rowSpacing,
+      rightStart,
+      width;
   final bool reverse;
   int get count => leftCount + rightCount;
   double get stride => tileHeight + rowSpacing;
@@ -83,6 +103,7 @@ class _FoldGridLayout extends SliverGridLayout {
   @override
   SliverGridGeometry getGeometryForChildIndex(int index) {
     final column = index % count;
+    final tileWidth = column < leftCount ? leftTile : rightTile;
     final x = column < leftCount
         ? column * (tileWidth + spacing)
         : rightStart + (column - leftCount) * (tileWidth + spacing);

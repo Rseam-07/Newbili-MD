@@ -11,6 +11,113 @@ import 'package:material_ui/material_ui.dart';
 
 void main() {
   testWidgets(
+    'Duo uses one edge column and fills book/tabletop regions without replacing playback',
+    (tester) async {
+      var size = const Size(951, 669);
+      var edge = NewbiliControlEdge.trailing;
+      var features = <DisplayFeature>[];
+      var fullscreen = false;
+      late StateSetter update;
+      final player = GlobalKey();
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.binding.setSurfaceSize(size);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: StatefulBuilder(
+            builder: (context, setState) {
+              update = setState;
+              return NewbiliWindowScope(
+                info: NewbiliWindowInfo(
+                  size: size,
+                  phone: true,
+                  regularWidth: true,
+                  controlEdge: edge,
+                ),
+                child: MediaQuery(
+                  data: MediaQuery.of(context).copyWith(
+                    size: size,
+                    displayFeatures: features,
+                    padding: edge == NewbiliControlEdge.trailing
+                        ? const EdgeInsets.only(right: 84)
+                        : EdgeInsets.zero,
+                  ),
+                  child: TabletPlayerStage(
+                    adaptToFoldable: true,
+                    isFullScreen: fullscreen,
+                    selectedPane: '评论',
+                    onBack: () {},
+                    onHome: () {},
+                    playerBuilder: (_, _) => StatefulBuilder(
+                      key: player,
+                      builder: (_, _) => const Text('同一播放器'),
+                    ),
+                    details: const Text('简介'),
+                    secondary: const Center(child: Text('可用的评论')),
+                    transport: const Center(child: Text('触控播放区域')),
+                    onSendDanmaku: () {},
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final state = player.currentState;
+      expect(find.text('可用的评论').hitTestable(), findsOneWidget);
+      expect(tester.getRect(find.byType(NewbiliEdgeSurface)).width, 84);
+      Future<void> resize(
+        Size next,
+        NewbiliControlEdge nextEdge,
+        List<DisplayFeature> nextFeatures, {
+        bool fs = false,
+      }) async {
+        await tester.binding.setSurfaceSize(next);
+        update(() {
+          size = next;
+          edge = nextEdge;
+          features = nextFeatures;
+          fullscreen = fs;
+        });
+        await tester.pumpAndSettle();
+        expect(player.currentState, same(state));
+        expect(find.text('可用的评论').hitTestable(), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      }
+
+      await resize(size, edge, const [
+        DisplayFeature(
+          bounds: Rect.fromLTWH(455.5, 0, 40, 669),
+          type: DisplayFeatureType.fold,
+          state: DisplayFeatureState.postureHalfOpened,
+        ),
+      ]);
+      expect(
+        tester.getRect(find.byKey(player)).bottom,
+        closeTo(455.5 / (16 / 9), .1),
+      );
+      expect(tester.getRect(find.text('触控播放区域')).left, lessThan(455.5));
+      await resize(size, edge, features, fs: true);
+      expect(find.text('触控播放区域').hitTestable(), findsOneWidget);
+      await resize(const Size(669, 951), NewbiliControlEdge.bottom, const []);
+      final portraitPlayer = tester.getRect(find.byKey(player));
+      expect(portraitPlayer.width, 669);
+      expect(portraitPlayer.height, closeTo(669 / (16 / 9), .1));
+      final tabletop = const [
+        DisplayFeature(
+          bounds: Rect.fromLTWH(0, 455.5, 669, 40),
+          type: DisplayFeatureType.fold,
+          state: DisplayFeatureState.postureHalfOpened,
+        ),
+      ];
+      await resize(size, edge, tabletop);
+      await resize(size, edge, tabletop, fs: true);
+      expect(tester.getRect(find.byKey(player)).bottom, 455.5);
+      expect(find.text('触控播放区域').hitTestable(), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+  testWidgets(
     'short tabletop pane keeps comments usable and the send action in its header',
     (tester) async {
       const size = Size(890, 540);
@@ -291,14 +398,14 @@ void main() {
       );
       await tester.pumpAndSettle();
       final state = page.currentState;
-      expect(tester.getRect(find.byKey(page)).right, 334);
+      expect(tester.getRect(find.byKey(page)).right, 394);
       await tester.tap(find.byKey(const ValueKey('edge-destination-2')));
       await tester.pumpAndSettle();
       expect(index, 2);
       update(() => trailing = false);
       await tester.pumpAndSettle();
       expect(page.currentState, same(state));
-      expect(tester.getRect(find.byKey(page)).left, 132);
+      expect(tester.getRect(find.byKey(page)).left, 72);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
     },

@@ -4,6 +4,7 @@ import 'dart:io' show Platform, File;
 import 'dart:typed_data' show Uint8List;
 
 import 'package:PiliPlus/common/constants.dart';
+import 'package:PiliPlus/common/layout/newbili_player_posture.dart';
 import 'package:PiliPlus/common/widgets/background_playback_picker.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
@@ -1803,22 +1804,24 @@ class HeaderControlState extends State<HeaderControl>
         const SizedBox(height: 12),
         Row(
           children: [
-            SizedBox(
-              width: btnWidth,
-              height: btnHeight,
-              child: IconButton(
-                tooltip: '返回',
-                style: btnStyle,
-                icon: const Icon(
-                  FontAwesomeIcons.arrowLeft,
-                  size: 15,
-                  color: Colors.white,
+            if (!NewbiliPlayerPosture.edgeControlsOf(context))
+              SizedBox(
+                width: btnWidth,
+                height: btnHeight,
+                child: IconButton(
+                  tooltip: '返回',
+                  style: btnStyle,
+                  icon: const Icon(
+                    FontAwesomeIcons.arrowLeft,
+                    size: 15,
+                    color: Colors.white,
+                  ),
+                  onPressed: () =>
+                      plPlayerController.onPopInvokedWithResult(false, null),
                 ),
-                onPressed: () =>
-                    plPlayerController.onPopInvokedWithResult(false, null),
               ),
-            ),
-            if (!plPlayerController.isDesktopPip &&
+            if (!NewbiliPlayerPosture.edgeControlsOf(context) &&
+                !plPlayerController.isDesktopPip &&
                 (!isFullScreen || !isPortrait))
               SizedBox(
                 width: btnWidth,

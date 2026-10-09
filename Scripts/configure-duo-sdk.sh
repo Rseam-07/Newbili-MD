@@ -22,6 +22,9 @@ func probe(_ view: UIView) {
   _ = view.reservedRegions(kind: .division, options: .includeInactive)
   _ = view.reservedRegions(kind: .occlusion)
   _ = view.traitCollection.verticalBarEdge
+  view.registerForTraitChanges(UITraitCollection.systemTraitsAffectingVerticalBarEdge) {
+    (_: UIView, _: UITraitCollection) in
+  }
   view.addInteraction(UIHingeInteraction { _, _ in })
 }
 SWIFT

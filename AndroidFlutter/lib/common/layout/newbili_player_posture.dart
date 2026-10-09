@@ -4,9 +4,16 @@ class NewbiliPlayerPosture extends InheritedWidget {
   const NewbiliPlayerPosture({
     super.key,
     required this.tabletop,
+    this.edgeControls = false,
     required super.child,
   });
   final bool tabletop;
+  final bool edgeControls;
+  static bool edgeControlsOf(BuildContext context) =>
+      context
+          .dependOnInheritedWidgetOfExactType<NewbiliPlayerPosture>()
+          ?.edgeControls ??
+      false;
   static bool tabletopOf(BuildContext context) =>
       context
           .dependOnInheritedWidgetOfExactType<NewbiliPlayerPosture>()
@@ -14,5 +21,5 @@ class NewbiliPlayerPosture extends InheritedWidget {
       false;
   @override
   bool updateShouldNotify(NewbiliPlayerPosture oldWidget) =>
-      tabletop != oldWidget.tabletop;
+      tabletop != oldWidget.tabletop || edgeControls != oldWidget.edgeControls;
 }

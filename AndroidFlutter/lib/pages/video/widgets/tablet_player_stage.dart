@@ -1,4 +1,8 @@
-import 'dart:ui' show lerpDouble;
+import 'dart:ui' show lerpDouble, DisplayFeature;
+
+import 'package:PiliPlus/common/layout/newbili_adaptive_window.dart';
+import 'package:PiliPlus/common/widgets/main_layout.dart';
+import 'package:PiliPlus/common/widgets/newbili_navigation_bar.dart';
 
 import 'package:PiliPlus/common/layout/newbili_fold_layout.dart';
 import 'package:PiliPlus/common/layout/newbili_player_posture.dart';
@@ -29,6 +33,10 @@ class TabletPlayerStage extends StatefulWidget {
     this.compact = false,
     this.videoAspectRatio = 16 / 9,
     this.transport,
+    this.adaptToFoldable = false,
+    this.onBack,
+    this.onHome,
+    this.extraEdgeAction,
   });
   final Widget Function(double width, double height) playerBuilder;
   final Widget details;
@@ -45,6 +53,9 @@ class TabletPlayerStage extends StatefulWidget {
   final bool compact;
   final double videoAspectRatio;
   final Widget? transport;
+  final bool adaptToFoldable;
+  final VoidCallback? onBack, onHome;
+  final Widget? extraEdgeAction;
   @override
   State<TabletPlayerStage> createState() => _TabletPlayerStageState();
 }
@@ -52,7 +63,8 @@ class TabletPlayerStage extends StatefulWidget {
 class _TabletPlayerStageState extends State<TabletPlayerStage>
     with TickerProviderStateMixin {
   late String _selected = widget.selectedPane ?? '简介';
-  late bool _open = widget.initialOpen || widget.compact;
+  late bool _open =
+      widget.initialOpen || widget.compact || widget.adaptToFoldable;
   late bool _visited = _open;
   late final _expansion = AnimationController(
     vsync: this,
@@ -63,6 +75,7 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
   NewbiliPlayerArrangement _arrangement = NewbiliPlayerArrangement.auto;
   bool _inline = false;
   Size _lastSize = const Size(320, 600);
+  bool _folded = false;
 
   List<String> get _names => [
     '简介',
@@ -173,10 +186,21 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
   @override
   Widget build(BuildContext context) {
     final colors = ColorScheme.of(context);
+    final edge = widget.isFullScreen
+        ? NewbiliControlEdge.bottom
+        : NewbiliWindowScope.of(context).controlEdge;
+    final edgeControls = edge != NewbiliControlEdge.bottom;
+    final edgeExtent = edgeControls
+        ? NewbiliEdgeSurface.extentOf(context)
+        : 0.0;
     _inline = NewbiliFoldLayout.resolve(
       MediaQuery.sizeOf(context),
       MediaQuery.of(context).displayFeatures,
-      compact: widget.compact,
+      compact:
+          widget.compact ||
+          widget.adaptToFoldable &&
+              MediaQuery.sizeOf(context).height >
+                  MediaQuery.sizeOf(context).width,
       arrangement: _arrangement,
     ).compact;
     final panes = <String, Widget>{
@@ -199,128 +223,211 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
       },
       child: Material(
         color: widget.isFullScreen ? Colors.black : colors.surface,
-        child: LayoutBuilder(
-          builder: (context, box) {
-            // Scene transfers can briefly report zero bounds. Lay out the same
-            // retained children at the previous size, clipped by the empty view.
-            final empty = box.biggest.isEmpty;
-            if (!empty) _lastSize = box.biggest;
-            final size = _lastSize;
-            final layout = NewbiliFoldLayout.resolve(
-              size,
-              MediaQuery.of(context).displayFeatures,
-              compact: widget.compact,
-              arrangement: _arrangement,
-              videoAspectRatio: widget.videoAspectRatio,
-              hasTransport: widget.transport != null,
-            );
-            _inline = layout.compact;
-            final card = layout.content;
-            final ball = layout.ball;
-            return OverflowBox(
-              minWidth: size.width,
-              maxWidth: size.width,
-              minHeight: size.height,
-              maxHeight: size.height,
-              child: IgnorePointer(
-                ignoring: empty,
-                child: AnimatedBuilder(
-                  animation: _expansion,
-                  builder: (context, _) {
-                    final t = _expansion.value;
-                    final bounds = Rect.lerp(ball, card, t)!;
-                    final contentOpacity = ((t - .25) / .75).clamp(0.0, 1.0);
-                    final geometryDuration = _expansion.isAnimating
-                        ? Duration.zero
-                        : NewbiliMotion.duration(
-                            context,
-                            NewbiliMotion.container,
-                          );
-                    final playerBounds = Rect.lerp(
-                      layout.folded ||
-                              layout.tabletop ||
-                              layout.compact && !widget.isFullScreen
-                          ? layout.player
-                          : Offset.zero & size,
-                      layout.player,
-                      t,
-                    )!;
-                    return Stack(
-                      children: [
-                        AnimatedPositioned.fromRect(
-                          duration: geometryDuration,
-                          curve: NewbiliMotion.emphasized,
-                          // A single player element survives animation and folding.
-                          rect: playerBounds,
-                          child: NewbiliPlayerPosture(
-                            tabletop: layout.tabletop,
-                            child: ColoredBox(
-                              color: Colors.black,
-                              child: LayoutBuilder(
-                                builder: (context, playerBox) =>
-                                    widget.playerBuilder(
-                                      playerBox.maxWidth,
-                                      playerBox.maxHeight,
-                                    ),
+        child: MainLayout(
+          trailingSideBar: edge == NewbiliControlEdge.trailing,
+          bottomNav: null,
+          sideBar: !edgeControls
+              ? null
+              : NewbiliEdgeSurface(
+                  child: LayoutBuilder(
+                    builder: (context, box) => SingleChildScrollView(
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minHeight: box.maxHeight),
+                        child: Column(
+                          children: [
+                            if (widget.onBack != null)
+                              IconButton(
+                                tooltip: '返回',
+                                onPressed: widget.onBack,
+                                icon: const Icon(Icons.arrow_back_rounded),
+                              ),
+                            if (widget.onHome != null)
+                              IconButton(
+                                tooltip: '返回主页',
+                                onPressed: widget.onHome,
+                                icon: const Icon(Icons.home_outlined),
+                              ),
+                            _arrangementButton(colors),
+                            IconButton(
+                              tooltip: _open ? '收起内容卡片' : '打开简介、评论与动态',
+                              onPressed: _inline ? null : _toggle,
+                              icon: const Icon(Icons.forum_outlined),
+                            ),
+                            IconButton(
+                              tooltip: '发弹幕',
+                              onPressed: widget.onSendDanmaku,
+                              icon: const Icon(Icons.edit_outlined),
+                            ),
+                            if (widget.extraEdgeAction != null)
+                              widget.extraEdgeAction!,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+          body: LayoutBuilder(
+            builder: (context, box) {
+              // Scene transfers can briefly report zero bounds. Lay out the same
+              // retained children at the previous size, clipped by the empty view.
+              final empty = box.biggest.isEmpty;
+              if (!empty) _lastSize = box.biggest;
+              final size = _lastSize;
+              final features = [
+                for (final f in MediaQuery.of(context).displayFeatures)
+                  DisplayFeature(
+                    bounds: f.bounds.shift(
+                      Offset(
+                        edge == NewbiliControlEdge.leading ? -edgeExtent : 0,
+                        0,
+                      ),
+                    ),
+                    type: f.type,
+                    state: f.state,
+                  ),
+              ];
+              final layout = NewbiliFoldLayout.resolve(
+                size,
+                features,
+                compact:
+                    widget.compact ||
+                    widget.adaptToFoldable && size.height > size.width,
+                arrangement: _arrangement,
+                videoAspectRatio: widget.videoAspectRatio,
+                hasTransport: widget.transport != null,
+              );
+              // A newly active fold gives the secondary region useful content.
+              // Keep the same tabs/scroll/player; collapsing it stays an explicit choice.
+              if ((layout.folded && !_folded || layout.compact) && !_open) {
+                _open = _visited = true;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  widget.onOpenChanged?.call(true);
+                  _animateExpansion();
+                });
+              }
+              _folded = layout.folded;
+              _inline = layout.compact;
+              final card = layout.content;
+              final ball = layout.ball;
+              return OverflowBox(
+                minWidth: size.width,
+                maxWidth: size.width,
+                minHeight: size.height,
+                maxHeight: size.height,
+                child: IgnorePointer(
+                  ignoring: empty,
+                  child: AnimatedBuilder(
+                    animation: _expansion,
+                    builder: (context, _) {
+                      // Immersive folding still gives both regions useful content;
+                      // controls and comments stay clear of the active division.
+                      final keepSecondary = layout.tabletop || layout.folded;
+                      final t = widget.isFullScreen && keepSecondary
+                          ? (_open ? 1.0 : 0.0)
+                          : _expansion.value;
+                      final bounds = Rect.lerp(ball, card, t)!;
+                      final contentOpacity = ((t - .25) / .75).clamp(0.0, 1.0);
+                      final geometryDuration = _expansion.isAnimating
+                          ? Duration.zero
+                          : NewbiliMotion.duration(
+                              context,
+                              NewbiliMotion.container,
+                            );
+                      final playerBounds = Rect.lerp(
+                        layout.folded ||
+                                layout.tabletop ||
+                                layout.compact && !widget.isFullScreen
+                            ? layout.player
+                            : Offset.zero & size,
+                        layout.player,
+                        t,
+                      )!;
+                      return Stack(
+                        children: [
+                          AnimatedPositioned.fromRect(
+                            duration: geometryDuration,
+                            curve: NewbiliMotion.emphasized,
+                            // A single player element survives animation and folding.
+                            rect: playerBounds,
+                            child: NewbiliSubRegion(
+                              bounds: playerBounds,
+                              child: NewbiliPlayerPosture(
+                                tabletop: !layout.transport.isEmpty,
+                                edgeControls: edgeControls,
+                                child: ColoredBox(
+                                  color: Colors.black,
+                                  child: LayoutBuilder(
+                                    builder: (context, playerBox) =>
+                                        widget.playerBuilder(
+                                          playerBox.maxWidth,
+                                          playerBox.maxHeight,
+                                        ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        AnimatedPositioned.fromRect(
-                          duration: geometryDuration,
-                          curve: NewbiliMotion.emphasized,
-                          rect: bounds,
-                          child: Offstage(
-                            offstage: widget.isFullScreen && t == 0,
-                            child: IgnorePointer(
-                              ignoring: widget.isFullScreen,
-                              child: Material(
-                                key: const ValueKey('tablet-content-surface'),
-                                color: Color.lerp(
-                                  colors.secondaryContainer,
-                                  colors.surfaceContainerLow,
-                                  t,
-                                ),
-                                elevation: lerpDouble(4, 1, t)!,
-                                shadowColor: colors.shadow.withValues(
-                                  alpha: .24,
-                                ),
-                                borderRadius: BorderRadius.circular(
-                                  layout.compact ? 0 : lerpDouble(28, 20, t)!,
-                                ),
-                                clipBehavior: Clip.antiAlias,
-                                child: Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    if (_visited)
-                                      IgnorePointer(
-                                        ignoring: !_open || t < .99,
-                                        child: ExcludeSemantics(
-                                          excluding: !_open || t < .99,
-                                          child: Opacity(
-                                            opacity: contentOpacity,
-                                            child: OverflowBox(
-                                              alignment: Alignment.topRight,
-                                              minWidth: card.width,
-                                              maxWidth: card.width,
-                                              minHeight: card.height,
-                                              maxHeight: card.height,
-                                              child: NewbiliSubRegion(
-                                                bounds: card,
-                                                child: ExcludeFocus(
-                                                  excluding: !_open,
-                                                  child: TickerMode(
-                                                    enabled:
-                                                        _open &&
-                                                        !widget.isFullScreen,
-                                                    child: MiniScaffold(
-                                                      key: widget.sheetKey,
-                                                      body: Builder(
-                                                        builder: (context) =>
-                                                            _cardContent(
-                                                              context,
-                                                              panes,
-                                                            ),
+                          AnimatedPositioned.fromRect(
+                            duration: geometryDuration,
+                            curve: NewbiliMotion.emphasized,
+                            rect: bounds,
+                            child: Offstage(
+                              offstage:
+                                  widget.isFullScreen &&
+                                  !keepSecondary &&
+                                  t == 0,
+                              child: IgnorePointer(
+                                ignoring: widget.isFullScreen && !keepSecondary,
+                                child: Material(
+                                  key: const ValueKey('tablet-content-surface'),
+                                  color: Color.lerp(
+                                    colors.secondaryContainer,
+                                    colors.surfaceContainerLow,
+                                    t,
+                                  ),
+                                  elevation: lerpDouble(4, 1, t)!,
+                                  shadowColor: colors.shadow.withValues(
+                                    alpha: .24,
+                                  ),
+                                  borderRadius: BorderRadius.circular(
+                                    layout.compact ? 0 : lerpDouble(28, 20, t)!,
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: Stack(
+                                    fit: StackFit.expand,
+                                    children: [
+                                      if (_visited)
+                                        IgnorePointer(
+                                          ignoring: !_open || t < .99,
+                                          child: ExcludeSemantics(
+                                            excluding: !_open || t < .99,
+                                            child: Opacity(
+                                              opacity: contentOpacity,
+                                              child: OverflowBox(
+                                                alignment: Alignment.topRight,
+                                                minWidth: card.width,
+                                                maxWidth: card.width,
+                                                minHeight: card.height,
+                                                maxHeight: card.height,
+                                                child: NewbiliSubRegion(
+                                                  bounds: card,
+                                                  child: ExcludeFocus(
+                                                    excluding: !_open,
+                                                    child: TickerMode(
+                                                      enabled:
+                                                          _open &&
+                                                          (!widget.isFullScreen ||
+                                                              keepSecondary),
+                                                      child: MiniScaffold(
+                                                        key: widget.sheetKey,
+                                                        body: Builder(
+                                                          builder: (context) =>
+                                                              _cardContent(
+                                                                context,
+                                                                panes,
+                                                              ),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
@@ -329,101 +436,104 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
                                             ),
                                           ),
                                         ),
-                                      ),
-                                    if (t < .35)
-                                      IgnorePointer(
-                                        ignoring: _open,
-                                        child: ExcludeSemantics(
-                                          excluding: _open,
-                                          child: Opacity(
-                                            opacity: (1 - t / .35).clamp(
-                                              0.0,
-                                              1.0,
-                                            ),
-                                            child: Tooltip(
-                                              message: '打开简介、评论与动态',
-                                              child: InkWell(
-                                                onTap: _toggle,
-                                                child: Icon(
-                                                  Icons.forum_outlined,
-                                                  size: 26,
-                                                  color: colors
-                                                      .onSecondaryContainer,
+                                      if (t < .35)
+                                        IgnorePointer(
+                                          ignoring: _open,
+                                          child: ExcludeSemantics(
+                                            excluding: _open,
+                                            child: Opacity(
+                                              opacity: (1 - t / .35).clamp(
+                                                0.0,
+                                                1.0,
+                                              ),
+                                              child: Tooltip(
+                                                message: '打开简介、评论与动态',
+                                                child: InkWell(
+                                                  onTap: _toggle,
+                                                  child: Icon(
+                                                    Icons.forum_outlined,
+                                                    size: 26,
+                                                    color: colors
+                                                        .onSecondaryContainer,
+                                                  ),
                                                 ),
                                               ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                        if (layout.tabletop && widget.transport != null)
-                          Positioned.fromRect(
-                            rect: layout.transport,
-                            child: Material(
-                              color: colors.surfaceContainer,
-                              child: NewbiliSubRegion(
-                                bounds: layout.transport,
-                                child: widget.transport!,
-                              ),
-                            ),
-                          ),
-                        // A manual posture choice also works on hosts whose SDK
-                        // has not yet exposed reserved regions (including iOS 27.0).
-                        if (!widget.isFullScreen)
-                          Positioned(
-                            left: (playerBounds.right - 56).clamp(
-                              playerBounds.left,
-                              size.width - 48,
-                            ),
-                            top: playerBounds.top + 8,
-                            child: Material(
-                              color: colors.surfaceContainer.withValues(
-                                alpha: .94,
-                              ),
-                              borderRadius: BorderRadius.circular(24),
-                              child: PopupMenuButton<NewbiliPlayerArrangement>(
-                                tooltip: '观看布局',
-                                icon: const Icon(
-                                  Icons.devices_fold_rounded,
-                                  size: 22,
+                          if (!layout.transport.isEmpty &&
+                              widget.transport != null)
+                            Positioned.fromRect(
+                              rect: layout.transport,
+                              child: Material(
+                                color: colors.surfaceContainer,
+                                child: NewbiliSubRegion(
+                                  bounds: layout.transport,
+                                  child: widget.transport!,
                                 ),
-                                initialValue: _arrangement,
-                                onSelected: (value) =>
-                                    setState(() => _arrangement = value),
-                                itemBuilder: (_) => [
-                                  for (final (value, label) in const [
-                                    (NewbiliPlayerArrangement.auto, '自动适应'),
-                                    (
-                                      NewbiliPlayerArrangement.sideBySide,
-                                      '并排观看',
-                                    ),
-                                    (NewbiliPlayerArrangement.tabletop, '桌面观看'),
-                                  ])
-                                    CheckedPopupMenuItem(
-                                      value: value,
-                                      checked: _arrangement == value,
-                                      child: Text(label),
-                                    ),
-                                ],
                               ),
                             ),
-                          ),
-                      ],
-                    );
-                  },
+                          // A manual posture choice also works on hosts whose SDK
+                          // has not yet exposed reserved regions (including iOS 27.0).
+                          if (!widget.isFullScreen && !edgeControls)
+                            Positioned(
+                              left: (playerBounds.right - 56).clamp(
+                                playerBounds.left,
+                                size.width - 48,
+                              ),
+                              top: playerBounds.top + 8,
+                              child: Material(
+                                color: colors.surfaceContainer.withValues(
+                                  alpha: .94,
+                                ),
+                                borderRadius: BorderRadius.circular(24),
+                                child: _arrangementButton(colors),
+                              ),
+                            ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
   }
+
+  Widget _arrangementButton(ColorScheme colors) =>
+      PopupMenuButton<NewbiliPlayerArrangement>(
+        tooltip: '观看布局',
+        icon: const Icon(
+          Icons.devices_fold_rounded,
+          size: 22,
+        ),
+        initialValue: _arrangement,
+        onSelected: (value) => setState(() => _arrangement = value),
+        itemBuilder: (_) => [
+          for (final (value, label) in const [
+            (NewbiliPlayerArrangement.auto, '自动适应'),
+            (
+              NewbiliPlayerArrangement.sideBySide,
+              '并排观看',
+            ),
+            (NewbiliPlayerArrangement.tabletop, '桌面观看'),
+          ])
+            CheckedPopupMenuItem(
+              value: value,
+              checked: _arrangement == value,
+              child: Text(label),
+            ),
+        ],
+      );
 
   Widget _cardContent(
     BuildContext context,

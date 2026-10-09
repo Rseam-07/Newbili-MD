@@ -1,6 +1,7 @@
 import 'dart:ui' show DisplayFeature;
 
 import 'package:PiliPlus/common/layout/newbili_adaptive_window.dart';
+import 'package:PiliPlus/common/layout/newbili_player_posture.dart';
 import 'package:PiliPlus/pages/video/widgets/foldable_playback_dock.dart';
 import 'package:PiliPlus/pages/dynamics_tab/view.dart';
 import 'package:PiliPlus/models/common/dynamic/dynamics_type.dart';
@@ -1103,69 +1104,70 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     );
   }
 
-  Widget manualPlayerWidget(double height) => Obx(() {
+  Widget manualPlayerWidget(double height, BuildContext context) => Obx(() {
     if (!videoDetailController.autoPlay) {
       return Stack(
         children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: kToolbarHeight,
-            child: Row(
-              children: [
-                SizedBox(
-                  width: 42,
-                  height: 34,
-                  child: IconButton(
-                    tooltip: '返回',
-                    icon: const Icon(
-                      FontAwesomeIcons.arrowLeft,
-                      size: 15,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(
-                          blurRadius: 1.5,
-                          color: Colors.black,
-                        ),
-                      ],
+          if (!NewbiliPlayerPosture.edgeControlsOf(context))
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: kToolbarHeight,
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 42,
+                    height: 34,
+                    child: IconButton(
+                      tooltip: '返回',
+                      icon: const Icon(
+                        FontAwesomeIcons.arrowLeft,
+                        size: 15,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 1.5,
+                            color: Colors.black,
+                          ),
+                        ],
+                      ),
+                      onPressed: Get.back,
                     ),
-                    onPressed: Get.back,
                   ),
-                ),
-                SizedBox(
-                  width: 42,
-                  height: 34,
-                  child: IconButton(
-                    tooltip: '返回主页',
-                    icon: const Icon(
-                      FontAwesomeIcons.house,
-                      size: 15,
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(
-                          blurRadius: 1.5,
-                          color: Colors.black,
-                        ),
-                      ],
+                  SizedBox(
+                    width: 42,
+                    height: 34,
+                    child: IconButton(
+                      tooltip: '返回主页',
+                      icon: const Icon(
+                        FontAwesomeIcons.house,
+                        size: 15,
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(
+                            blurRadius: 1.5,
+                            color: Colors.black,
+                          ),
+                        ],
+                      ),
+                      onPressed:
+                          videoDetailController.plPlayerController.onCloseAll,
                     ),
-                    onPressed:
-                        videoDetailController.plPlayerController.onCloseAll,
                   ),
-                ),
-                const Spacer(),
-                _moreBtn(
-                  Colors.white,
-                  shadows: const [
-                    Shadow(
-                      blurRadius: 1.5,
-                      color: Colors.black,
-                    ),
-                  ],
-                ),
-              ],
+                  const Spacer(),
+                  _moreBtn(
+                    Colors.white,
+                    shadows: const [
+                      Shadow(
+                        blurRadius: 1.5,
+                        color: Colors.black,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
           Positioned(
             right: 12,
             top: height - 70,
@@ -1330,16 +1332,24 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
   Widget get adaptivePlayerPage => Obx(() {
     final fullscreen = isFullScreen;
+    final edge = NewbiliWindowScope.of(context).controlEdge;
+    final edgeControls = !fullscreen && edge != NewbiliControlEdge.bottom;
     return SimpleScaffold(
       backgroundColor: fullscreen ? Colors.black : null,
-      appBar: removeAppBar(fullscreen)
+      appBar: removeAppBar(fullscreen) || edgeControls
           ? null
           : SimpleAppBar(
               height: padding.top,
               brightness: colorScheme.brightness,
             ),
       body: Padding(
-        padding: fullscreen ? EdgeInsets.zero : padding.copyWith(top: 0),
+        padding: fullscreen
+            ? EdgeInsets.zero
+            : padding.copyWith(
+                top: 0,
+                left: edge == NewbiliControlEdge.leading ? 0 : padding.left,
+                right: edge == NewbiliControlEdge.trailing ? 0 : padding.right,
+              ),
         child: MediaQuery(
           data: MediaQuery.of(context).copyWith(
             displayFeatures: [
@@ -1347,8 +1357,12 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                 DisplayFeature(
                   bounds: feature.bounds.shift(
                     Offset(
-                      fullscreen ? 0 : -padding.left,
-                      removeAppBar(fullscreen) ? 0 : -padding.top,
+                      fullscreen || edge == NewbiliControlEdge.leading
+                          ? 0
+                          : -padding.left,
+                      removeAppBar(fullscreen) || edgeControls
+                          ? 0
+                          : -padding.top,
                     ),
                   ),
                   type: feature.type,
@@ -1357,6 +1371,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             ],
           ),
           child: TabletPlayerStage(
+            extraEdgeAction: _moreBtn(colorScheme.onSurface),
+            adaptToFoldable: NewbiliWindowScope.foldable(context),
+            onBack: () => videoDetailController.plPlayerController
+                .onPopInvokedWithResult(false, null),
+            onHome: videoDetailController.plPlayerController.onCloseAll,
             compact: !NewbiliWindowScope.expanded(
               context,
               Size(maxWidth, maxHeight),
@@ -1365,6 +1384,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                 ? 9 / 16
                 : 16 / 9,
             transport: FoldablePlaybackDock(
+              onStart: () async {
+                await handlePlay();
+              },
+              title: introController.videoDetail.value.title,
               controller: videoDetailController.plPlayerController,
               onSubtitles: () =>
                   videoDetailController.showSubtitlePicker(context),
@@ -1609,6 +1632,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                 children: [
                   if (heroCover?.isNotEmpty == true)
                     NetworkImgLayer(
+                      fit: BoxFit.contain,
                       src: heroCover,
                       width: width,
                       height: height,
@@ -1629,6 +1653,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                 behavior: .opaque,
                 child: Obx(
                   () => NetworkImgLayer(
+                    fit: BoxFit.contain,
                     type: .emote,
                     quality: 60,
                     src: videoDetailController.cover.value,
@@ -1645,7 +1670,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           }
           return const SizedBox.shrink();
         }),
-        manualPlayerWidget(height),
+        Builder(builder: (context) => manualPlayerWidget(height, context)),
 
         if (videoDetailController.plPlayerController.enableBlock ||
             videoDetailController.continuePlayingPart)

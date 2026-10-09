@@ -275,6 +275,18 @@ class NewbiliWindowScope extends InheritedWidget {
         (info.regularWidth || size.shortestSide >= 600 || size.width >= 840);
   }
 
+  static bool foldable(BuildContext context) {
+    final info = of(context);
+    return info.phone &&
+            (info.regularWidth ||
+                info.controlEdge != NewbiliControlEdge.bottom) ||
+        MediaQuery.of(context).displayFeatures.any(
+          (f) =>
+              f.type == DisplayFeatureType.fold ||
+              f.type == DisplayFeatureType.hinge,
+        );
+  }
+
   @override
   bool updateShouldNotify(NewbiliWindowScope oldWidget) =>
       info != oldWidget.info;

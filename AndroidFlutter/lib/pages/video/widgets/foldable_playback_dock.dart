@@ -12,9 +12,13 @@ class FoldablePlaybackDock extends StatefulWidget {
     super.key,
     required this.controller,
     required this.onSubtitles,
+    this.title,
+    this.onStart,
   });
   final PlPlayerController controller;
   final VoidCallback onSubtitles;
+  final String? title;
+  final Future<void> Function()? onStart;
   @override
   State<FoldablePlaybackDock> createState() => _FoldablePlaybackDockState();
 }
@@ -34,20 +38,26 @@ class _FoldablePlaybackDockState extends State<FoldablePlaybackDock> {
     final c = widget.controller;
     final duration = c.duration.value;
     final ready = c.videoPlayerController != null;
-    final playing = c.playerStatus.isPlaying;
+    final playing = ready && c.playerStatus.isPlaying;
     final value = (_scrub ?? c.position.value.toDouble()).clamp(
       0.0,
       duration.toDouble(),
     );
-    return Padding(
+    final controls = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [
           IconButton(
             tooltip: playing ? '暂停' : '播放',
-            onPressed: !ready
+            onPressed: !ready && widget.onStart == null
                 ? null
-                : () => _perform(playing ? c.pause : c.play),
+                : () => _perform(
+                    !ready
+                        ? widget.onStart!
+                        : playing
+                        ? c.pause
+                        : c.play,
+                  ),
             icon: Icon(
               playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
               size: 28,
@@ -100,7 +110,7 @@ class _FoldablePlaybackDockState extends State<FoldablePlaybackDock> {
           ),
           IconButton(
             tooltip: c.isFullScreen.value ? '退出全屏' : '全屏',
-            onPressed: c.triggerFullScreen,
+            onPressed: () => c.triggerFullScreen(status: !c.isFullScreen.value),
             icon: Icon(
               c.isFullScreen.value
                   ? Icons.fullscreen_exit_rounded
@@ -109,6 +119,72 @@ class _FoldablePlaybackDockState extends State<FoldablePlaybackDock> {
           ),
         ],
       ),
+    );
+    return LayoutBuilder(
+      builder: (context, box) {
+        if (box.maxHeight < 160) return controls;
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: box.maxHeight - 32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (widget.title?.isNotEmpty == true) ...[
+                  Text(
+                    widget.title!,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                ],
+                SizedBox(height: 80, child: controls),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      tooltip: '后退 10 秒',
+                      icon: const Icon(Icons.replay_10_rounded),
+                      onPressed: !ready
+                          ? null
+                          : () => _perform(
+                              () => c.seekTo(
+                                Duration(
+                                  seconds: (c.position.value - 10).clamp(
+                                    0,
+                                    duration,
+                                  ),
+                                ),
+                              ),
+                            ),
+                    ),
+                    const SizedBox(width: 24),
+                    IconButton(
+                      tooltip: '前进 10 秒',
+                      icon: const Icon(Icons.forward_10_rounded),
+                      onPressed: !ready
+                          ? null
+                          : () => _perform(
+                              () => c.seekTo(
+                                Duration(
+                                  seconds: (c.position.value + 10).clamp(
+                                    0,
+                                    duration,
+                                  ),
+                                ),
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   });
 }

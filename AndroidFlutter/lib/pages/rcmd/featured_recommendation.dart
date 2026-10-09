@@ -25,6 +25,7 @@ class TabletRecommendationStage extends StatefulWidget {
     this.coverBuilder,
     this.lastRefreshAt,
     this.showRecommendations = true,
+    this.dense = false,
   });
   final List<BaseRcmdVideoItemModel> items;
   final VoidCallback onRefresh;
@@ -34,6 +35,7 @@ class TabletRecommendationStage extends StatefulWidget {
   final Widget Function(BaseRcmdVideoItemModel item)? coverBuilder;
   final int? lastRefreshAt;
   final bool showRecommendations;
+  final bool dense;
 
   @override
   State<TabletRecommendationStage> createState() =>
@@ -148,6 +150,26 @@ class _TabletRecommendationStageState extends State<TabletRecommendationStage> {
             ),
           ),
         );
+        if (widget.dense) {
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(24, 4, 24, 12),
+            child: Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    '为你推荐',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: widget.onRefresh,
+                  icon: const Icon(Icons.refresh_rounded),
+                  label: const Text('换一换'),
+                ),
+              ],
+            ),
+          );
+        }
         final info = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,

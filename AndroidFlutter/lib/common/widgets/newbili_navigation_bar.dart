@@ -1,5 +1,10 @@
 import 'package:PiliPlus/common/widgets/newbili_press_feedback.dart';
 import 'package:PiliPlus/common/theme/newbili_theme.dart';
+import 'package:PiliPlus/common/layout/newbili_adaptive_window.dart';
+
+import 'dart:math' as math;
+import 'dart:ui' show DisplayFeatureType;
+
 import 'package:material_ui/material_ui.dart';
 
 /// The root navigation occupies its own layout space, including the system inset.
@@ -160,6 +165,54 @@ class NewbiliNavigationBar extends StatelessWidget {
 
 /// Duo places navigation on the reachable outer edge. It scrolls when system
 /// chrome, the keyboard or large type leaves less vertical room.
+class NewbiliEdgeSurface extends StatelessWidget {
+  const NewbiliEdgeSurface({super.key, required this.child});
+  static const width = 72.0;
+  static double extentOf(BuildContext context) => math.max(
+    width,
+    math.max(
+      MediaQuery.paddingOf(context).left,
+      MediaQuery.paddingOf(context).right,
+    ),
+  );
+  final Widget child;
+  @override
+  Widget build(BuildContext context) {
+    final media = MediaQuery.of(context);
+    final edge = NewbiliWindowScope.of(context).controlEdge;
+    final extent = extentOf(context);
+    var top = media.padding.top;
+    for (final f in media.displayFeatures) {
+      if (f.type != DisplayFeatureType.cutout) continue;
+      final onEdge = edge == NewbiliControlEdge.leading
+          ? f.bounds.left < extent
+          : f.bounds.right > media.size.width - extent;
+      if (onEdge && f.bounds.top <= top + 1) {
+        top = math.max(top, f.bounds.bottom + 8);
+      }
+    }
+    // The side safe area is the control column itself. Adding it outside the
+    // rail wastes two columns; only the camera/status and home areas need gaps.
+    return Material(
+      color: ColorScheme.of(context).surfaceContainerLow,
+      child: SizedBox(
+        width: extent,
+        child: Padding(
+          padding: EdgeInsets.only(top: top, bottom: media.padding.bottom),
+          child: MediaQuery.removePadding(
+            context: context,
+            removeLeft: true,
+            removeRight: true,
+            removeTop: true,
+            removeBottom: true,
+            child: child,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class NewbiliEdgeNavigationBar extends StatelessWidget {
   const NewbiliEdgeNavigationBar({
     super.key,
@@ -168,7 +221,7 @@ class NewbiliEdgeNavigationBar extends StatelessWidget {
     required this.onDestinationSelected,
     this.header,
   });
-  static const width = 80.0;
+  static const width = NewbiliEdgeSurface.width;
   final List<NavigationDestination> destinations;
   final int selectedIndex;
   final ValueChanged<int> onDestinationSelected;
@@ -176,94 +229,88 @@ class NewbiliEdgeNavigationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = ColorScheme.of(context);
-    return Material(
-      color: colors.surfaceContainerLow,
-      child: SafeArea(
-        child: SizedBox(
-          width: width,
-          child: LayoutBuilder(
-            builder: (context, box) => SingleChildScrollView(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(minHeight: box.maxHeight),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    if (header != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: header!,
-                      ),
-                    for (var i = 0; i < destinations.length; i++)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        child: Semantics(
-                          selected: i == selectedIndex,
-                          button: true,
-                          label: destinations[i].label,
-                          child: Tooltip(
-                            message: destinations[i].label,
-                            child: InkWell(
-                              key: ValueKey('edge-destination-$i'),
+    return NewbiliEdgeSurface(
+      child: LayoutBuilder(
+        builder: (context, box) => SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: box.maxHeight),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (header != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: header!,
+                  ),
+                for (var i = 0; i < destinations.length; i++)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    child: Semantics(
+                      selected: i == selectedIndex,
+                      button: true,
+                      label: destinations[i].label,
+                      child: Tooltip(
+                        message: destinations[i].label,
+                        child: InkWell(
+                          key: ValueKey('edge-destination-$i'),
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () => onDestinationSelected(i),
+                          child: AnimatedContainer(
+                            duration: NewbiliMotion.duration(
+                              context,
+                              NewbiliMotion.container,
+                            ),
+                            curve: NewbiliMotion.emphasized,
+                            constraints: const BoxConstraints(
+                              minHeight: 56,
+                              minWidth: 48,
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 4,
+                            ),
+                            decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
-                              onTap: () => onDestinationSelected(i),
-                              child: AnimatedContainer(
-                                duration: NewbiliMotion.duration(
-                                  context,
-                                  NewbiliMotion.container,
-                                ),
-                                curve: NewbiliMotion.emphasized,
-                                constraints: const BoxConstraints(
-                                  minHeight: 56,
-                                  minWidth: 48,
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 8,
-                                  horizontal: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20),
-                                  color: i == selectedIndex
-                                      ? colors.secondaryContainer
-                                      : Colors.transparent,
-                                ),
-                                child: ExcludeSemantics(
-                                  child: Column(
-                                    children: [
-                                      IconTheme(
-                                        data: IconThemeData(
-                                          size: 24,
-                                          color: i == selectedIndex
-                                              ? colors.onSecondaryContainer
-                                              : colors.onSurfaceVariant,
-                                        ),
-                                        child: i == selectedIndex
-                                            ? destinations[i].selectedIcon ??
-                                                  destinations[i].icon
-                                            : destinations[i].icon,
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        destinations[i].label,
-                                        textAlign: TextAlign.center,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .labelSmall,
-                                      ),
-                                    ],
+                              color: i == selectedIndex
+                                  ? colors.secondaryContainer
+                                  : Colors.transparent,
+                            ),
+                            child: ExcludeSemantics(
+                              child: Column(
+                                children: [
+                                  IconTheme(
+                                    data: IconThemeData(
+                                      size: 24,
+                                      color: i == selectedIndex
+                                          ? colors.onSecondaryContainer
+                                          : colors.onSurfaceVariant,
+                                    ),
+                                    child: i == selectedIndex
+                                        ? destinations[i].selectedIcon ??
+                                              destinations[i].icon
+                                        : destinations[i].icon,
                                   ),
-                                ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    destinations[i].label,
+                                    textAlign: TextAlign.center,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall,
+                                  ),
+                                ],
                               ),
                             ),
                           ),
                         ),
                       ),
-                    const SizedBox(height: 8),
-                  ],
-                ),
-              ),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+              ],
             ),
           ),
         ),
