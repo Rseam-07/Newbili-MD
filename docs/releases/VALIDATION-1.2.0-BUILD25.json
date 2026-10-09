@@ -1,0 +1,118 @@
+{
+  "release": "v1.2.0-build.25",
+  "date": "2026-10-09",
+  "sourceCommit": "07e3a161d6d47a525a612d74ca6c9d09fa763938",
+  "unifiedVersion": "1.2.0+25",
+  "checks": {
+    "focusedChecksPassed": true,
+    "fullSuiteRepeated": false,
+    "analysisErrors": 0,
+    "analysisWarnings": 0,
+    "nativeSDKPublicAPIProbe": "passed",
+    "coverage": [
+      "Duo edge column and book lower controls",
+      "tabletop fullscreen retains usable comments",
+      "cover/inner/window resizing retains player State and selected content",
+      "lazy hinge grid and RTL",
+      "native tent-state decoding and stale geometry refusal",
+      "tent overlay does not shrink video; exiting restores content and same player State"
+    ],
+    "logs": [
+      "duo-layout-tests-25.log: 11 passed",
+      "duo-layout-final-tests-25.log: 10 passed after book/tabletop changes",
+      "duo-final-book-test-25.log: changed fullscreen case passed",
+      "duo-tent-tests-25.log: geometry passed; widget found stale sidebar label",
+      "duo-tent-widget-repair-25.log: widget passed after refreshing sidebar",
+      "duo-final-analyze-25.log and duo-tent-analyze-25.log: no issues"
+    ],
+    "binaryDuoLinks": "reservedRegions, UIHingeInteraction, verticalBarEdge, systemTraitsAffectingVerticalBarEdge and hingeState verified in final IPA"
+  },
+  "android": {
+    "package": "com.rseam07.newbili",
+    "minSdk": 31,
+    "targetSdk": 37,
+    "buildSuccess": true,
+    "signerSha256": "4876a7a04d24c8a89e82ca355a8f3fc404019d076af5aae2f5faaac32b5d6cdb",
+    "verifiedBy": "apksigner v2 and zipalign; all three ABI identities verified",
+    "emulator": "Not rerun for Build 25; shared changed layouts covered by focused Flutter checks. All three release APK identities, versions, ABIs, zipalign and existing certificate independently verified."
+  },
+  "ios": {
+    "package": "com.rseam07.newbili.md",
+    "minimumOS": "15.0",
+    "deviceFamily": [
+      1,
+      2
+    ],
+    "phoneOrientations": 4,
+    "buildSuccess": true,
+    "requiresUserSigning": true,
+    "unsignedIPAIntegrity": "passed",
+    "simulatorBuild": "Existing SDK 27.1 debug host used for Build 25 Flutter hot-reload QA; final native code separately compiled in the unsigned release IPA.",
+    "startup": "Actual online playback and DeviceHub inspection on iPhone Duo / iOS 27.1; same decoder/texture/player retained across recorded poses.",
+    "sdk": "27.1",
+    "nativeDuoApiEnabled": true,
+    "nativeDuoApiRequiredSDK": "27.1",
+    "xcode": "27.1 RC",
+    "xcodeBuild": "27A9275",
+    "duoPoseValidation": "Passed recorded book, tabletop, fullscreen, unfolded portrait/landscape, closed outer display. See DUO-POSES-BUILD25.json for source and limits.",
+    "physicalDuoValidation": "pending",
+    "tentValidation": "Focused geometry and widget checks passed; native hinge status bridge compiled. Actual tent device/display pose remains pending."
+  },
+  "assets": [
+    {
+      "abi": "arm64-v8a",
+      "name": "Newbili-MD-1.2.0-25-arm64-v8a.apk",
+      "bytes": 25601260,
+      "sha256": "2d6e1038d1e1f6c84010b573ef3eafc06c102101e86e4a59d3e009ab28729643",
+      "url": "https://rseam-07.github.io/downloads/files/Newbili-MD-1.2.0-25-arm64-v8a.apk",
+      "githubUrl": "https://github.com/Rseam-07/Newbili-MD/releases/download/v1.2.0-build.25/Newbili-MD-1.2.0-25-arm64-v8a.apk"
+    },
+    {
+      "abi": "armeabi-v7a",
+      "name": "Newbili-MD-1.2.0-25-armeabi-v7a.apk",
+      "bytes": 25515258,
+      "sha256": "719977ab767fb4d653d2201a4e300cfa4380508e843509b9de784ada25ac5b40",
+      "url": "https://rseam-07.github.io/downloads/files/Newbili-MD-1.2.0-25-armeabi-v7a.apk",
+      "githubUrl": "https://github.com/Rseam-07/Newbili-MD/releases/download/v1.2.0-build.25/Newbili-MD-1.2.0-25-armeabi-v7a.apk"
+    },
+    {
+      "abi": "x86_64",
+      "name": "Newbili-MD-1.2.0-25-x86_64.apk",
+      "bytes": 26518743,
+      "sha256": "f698fec3a5532fb18899fbbc8eaa5ab6b1d0d1cf36ed2e8529b7d10221313938",
+      "url": "https://rseam-07.github.io/downloads/files/Newbili-MD-1.2.0-25-x86_64.apk",
+      "githubUrl": "https://github.com/Rseam-07/Newbili-MD/releases/download/v1.2.0-build.25/Newbili-MD-1.2.0-25-x86_64.apk"
+    },
+    {
+      "name": "Newbili-MD-1.2.0-25-iOS-unsigned.ipa",
+      "bytes": 24411961,
+      "sha256": "d061c0e7319b6bad978de58bb5eb7b837839ff7e1c71a6e1f0725d82744b7cb2",
+      "url": "https://rseam-07.github.io/downloads/files/Newbili-MD-1.2.0-25-iOS-unsigned.ipa",
+      "githubUrl": "https://github.com/Rseam-07/Newbili-MD/releases/download/v1.2.0-build.25/Newbili-MD-1.2.0-25-iOS-unsigned.ipa",
+      "requiresSigning": true,
+      "minIOS": "15.0",
+      "sdk": "iphoneos27.1",
+      "nativeDuoApiEnabled": true,
+      "duoSimulatorPoseValidation": "passed"
+    }
+  ],
+  "limits": [
+    "Unsigned IPA requires user signing.",
+    "Physical Duo playback, power/frame timing and real system Split View remain pending.",
+    "Tent auto/manual layout logic is tested; actual tent pose hardware/display acceptance remains pending.",
+    "Native pose recording used Build 25 shared Flutter source hot-reloaded into the previous SDK 27.1 debug host; final native bridge was separately compiled and inspected in the release IPA.",
+    "No full test suite repeated; Android emulator flow not repeated."
+  ],
+  "sdkInstallation": {
+    "source": "https://developer.apple.com/services-account/download?path=/Developer_Tools/Xcode_27.1_Release_Candidate/Xcode_27.1_Release_Candidate.xip",
+    "archiveBytes": 2027369056,
+    "archiveSha256": "038ad29cc2cd87e7762aac596833943000fd3d5fb64be530e2ecdbe5449cd660",
+    "xcode": "27.1 RC",
+    "build": "27A9275",
+    "iphoneosSDK": "27.1",
+    "archiveSignature": "signed Apple Software",
+    "applicationDeepSignature": "passed",
+    "duoPublicAPICompileProbe": "passed",
+    "simulatorRuntime": "installed iOS 27.1 arm64 24A94232"
+  }
+}
