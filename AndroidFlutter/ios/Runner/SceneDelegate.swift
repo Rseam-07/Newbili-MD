@@ -13,6 +13,7 @@ final class MDAdaptiveViewController: FlutterViewController, FlutterStreamHandle
   private var sink: FlutterEventSink?
   private var lastSnapshot: NSDictionary?
   private var publishScheduled = false
+  private var hingeState = "unknown"
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -29,10 +30,17 @@ final class MDAdaptiveViewController: FlutterViewController, FlutterStreamHandle
         (controller: MDAdaptiveViewController, _: UITraitCollection) in
         controller.schedulePublish()
       }
-      view.addInteraction(UIHingeInteraction { [weak self] _, _ in
+      view.addInteraction(UIHingeInteraction { [weak self] _, update in
         // Reserved regions supply layout geometry. The angle is deliberately
         // not used to invent a crease or trigger playback/orientation changes.
-        self?.schedulePublish()
+        guard let self else { return }
+        switch update.hinge?.status {
+        case .closed?: hingeState = "closed"
+        case .partiallyOpen?: hingeState = "partiallyOpen"
+        case .fullyOpen?: hingeState = "fullyOpen"
+        default: hingeState = "unknown"
+        }
+        self.schedulePublish()
       })
     }
     #endif
@@ -102,7 +110,8 @@ final class MDAdaptiveViewController: FlutterViewController, FlutterStreamHandle
     return ["width": view.bounds.width, "height": view.bounds.height,
       "regularWidth": traitCollection.horizontalSizeClass == .regular,
       "phone": traitCollection.userInterfaceIdiom == .phone,
-      "controlEdge": edge, "regions": regions, "nativeFoldApi": nativeFoldApi]
+      "controlEdge": edge, "regions": regions, "nativeFoldApi": nativeFoldApi,
+      "hingeState": hingeState]
   }
 
   private func publish() {

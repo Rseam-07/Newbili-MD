@@ -15,6 +15,39 @@ DisplayFeature fold(Rect bounds, {bool flat = false}) => DisplayFeature(
 );
 
 void main() {
+  test(
+    'tent uses reliable outer geometry and never invents an inner division',
+    () {
+      final info = NewbiliWindowInfo.fromMap({
+        'width': 678,
+        'height': 466,
+        'hingeState': 'partiallyOpen',
+        'controlEdge': 'leading',
+      });
+      expect(info.tentWatching(const Size(678, 466)), isTrue);
+      expect(info.tentWatching(const Size(466, 678)), isFalse);
+      expect(info.tentWatching(const Size(951, 669)), isFalse);
+      expect(
+        const NewbiliWindowInfo(size: Size(678, 466))
+            .tentWatching(const Size(678, 466)),
+        isFalse,
+      );
+      final layout = NewbiliFoldLayout.resolve(
+        const Size(606, 466),
+        const [],
+        compact: true,
+        arrangement: NewbiliPlayerArrangement.tent,
+      );
+      expect(layout.player, const Rect.fromLTWH(0, 0, 606, 466));
+      expect(layout.tent, isTrue);
+      expect(layout.transport.isEmpty, isTrue);
+      final book = NewbiliFoldLayout.resolve(const Size(951, 669), [
+        fold(const Rect.fromLTWH(455.5, 0, 40, 669)),
+      ], arrangement: NewbiliPlayerArrangement.tent);
+      expect(book.tent, isFalse);
+      expect(book.player.right, 455.5);
+    },
+  );
   test('cover, split window and expanded layouts keep usable bounds', () {
     for (final size in const [
       Size(466, 678),

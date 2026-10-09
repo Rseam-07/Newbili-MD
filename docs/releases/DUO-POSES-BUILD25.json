@@ -1,0 +1,530 @@
+{
+  "runtime": "iOS 27.1 (24A94232)",
+  "device": "iPhone Duo simulator",
+  "nativeSimulatorPosesPassed": true,
+  "captureType": "read-only Dart VM object identity plus DeviceHub and simctl screenshots",
+  "implementation": "Build 25 Flutter source hot-reloaded into SDK 27.1 debug host; final edge trait observer verified by native compilation separately",
+  "sourceCommit": "374a7c4",
+  "scenarios": [
+    {
+      "label": "book",
+      "time": "2026-10-09T06:39:27.544829+00:00",
+      "pid": 17731,
+      "isolate": "isolates/3449566441726671",
+      "window": {
+        "regularWidth": "true",
+        "phone": "true",
+        "nativeFoldApi": "true",
+        "size": {
+          "_dx": "951.0",
+          "_dy": "669.0"
+        },
+        "edge": "trailing",
+        "regions": [
+          {
+            "bounds": {
+              "left": "455.5",
+              "top": "0.0",
+              "right": "495.5",
+              "bottom": "669.0"
+            },
+            "type": {
+              "index": "1",
+              "_name": "fold"
+            },
+            "state": {
+              "index": "2",
+              "_name": "postureHalfOpened"
+            }
+          },
+          {
+            "bounds": {
+              "left": "867.0",
+              "top": "0.0",
+              "right": "951.0",
+              "bottom": "120.0"
+            },
+            "type": {
+              "index": "3",
+              "_name": "cutout"
+            },
+            "state": {
+              "index": "0",
+              "_name": "unknown"
+            }
+          }
+        ]
+      },
+      "players": [
+        {
+          "controllerIdentity": 3129937639,
+          "decoderIdentity": 633589293,
+          "textureControllerIdentity": 436766550,
+          "position": "56",
+          "duration": "1358"
+        }
+      ],
+      "stage": {
+        "_selected": "评论",
+        "_open": "true",
+        "_inline": "false",
+        "_folded": "true",
+        "identity": 691686422
+      }
+    },
+    {
+      "label": "tabletop",
+      "time": "2026-10-09T06:39:57.527504+00:00",
+      "pid": 17731,
+      "isolate": "isolates/3449566441726671",
+      "window": {
+        "regularWidth": "true",
+        "phone": "true",
+        "nativeFoldApi": "true",
+        "size": {
+          "_dx": "669.0",
+          "_dy": "951.0"
+        },
+        "edge": "bottom",
+        "regions": [
+          {
+            "bounds": {
+              "left": "0.0",
+              "top": "455.5",
+              "right": "669.0",
+              "bottom": "495.5"
+            },
+            "type": {
+              "index": "1",
+              "_name": "fold"
+            },
+            "state": {
+              "index": "2",
+              "_name": "postureHalfOpened"
+            }
+          },
+          {
+            "bounds": {
+              "left": "535.0",
+              "top": "0.0",
+              "right": "669.0",
+              "bottom": "82.0"
+            },
+            "type": {
+              "index": "3",
+              "_name": "cutout"
+            },
+            "state": {
+              "index": "0",
+              "_name": "unknown"
+            }
+          }
+        ]
+      },
+      "players": [
+        {
+          "controllerIdentity": 3129937639,
+          "decoderIdentity": 633589293,
+          "textureControllerIdentity": 436766550,
+          "position": "86",
+          "duration": "1358"
+        }
+      ],
+      "stage": {
+        "_selected": "评论",
+        "_open": "true",
+        "_inline": "false",
+        "_folded": "true",
+        "identity": 691686422
+      }
+    },
+    {
+      "label": "tabletop-fullscreen",
+      "time": "2026-10-09T06:40:18.134985+00:00",
+      "pid": 17731,
+      "isolate": "isolates/3449566441726671",
+      "window": {
+        "regularWidth": "true",
+        "phone": "true",
+        "nativeFoldApi": "true",
+        "size": {
+          "_dx": "669.0",
+          "_dy": "951.0"
+        },
+        "edge": "bottom",
+        "regions": [
+          {
+            "bounds": {
+              "left": "0.0",
+              "top": "455.5",
+              "right": "669.0",
+              "bottom": "495.5"
+            },
+            "type": {
+              "index": "1",
+              "_name": "fold"
+            },
+            "state": {
+              "index": "2",
+              "_name": "postureHalfOpened"
+            }
+          }
+        ]
+      },
+      "players": [
+        {
+          "controllerIdentity": 3129937639,
+          "decoderIdentity": 633589293,
+          "textureControllerIdentity": 436766550,
+          "position": "106",
+          "duration": "1358"
+        }
+      ],
+      "stage": {
+        "_selected": "评论",
+        "_open": "true",
+        "_inline": "false",
+        "_folded": "true",
+        "identity": 691686422
+      }
+    },
+    {
+      "label": "open-portrait-exit",
+      "time": "2026-10-09T06:45:44.727419+00:00",
+      "pid": 17731,
+      "isolate": "isolates/3449566441726671",
+      "window": {
+        "regularWidth": "true",
+        "phone": "true",
+        "nativeFoldApi": "true",
+        "size": {
+          "_dx": "669.0",
+          "_dy": "951.0"
+        },
+        "edge": "bottom",
+        "regions": [
+          {
+            "bounds": {
+              "left": "0.0",
+              "top": "455.5",
+              "right": "669.0",
+              "bottom": "495.5"
+            },
+            "type": {
+              "index": "1",
+              "_name": "fold"
+            },
+            "state": {
+              "index": "1",
+              "_name": "postureFlat"
+            }
+          },
+          {
+            "bounds": {
+              "left": "535.0",
+              "top": "0.0",
+              "right": "669.0",
+              "bottom": "82.0"
+            },
+            "type": {
+              "index": "3",
+              "_name": "cutout"
+            },
+            "state": {
+              "index": "0",
+              "_name": "unknown"
+            }
+          }
+        ]
+      },
+      "players": [
+        {
+          "controllerIdentity": 3129937639,
+          "decoderIdentity": 633589293,
+          "textureControllerIdentity": 436766550,
+          "position": "432",
+          "duration": "1358"
+        }
+      ],
+      "stage": {
+        "_selected": "评论",
+        "_open": "true",
+        "_inline": "true",
+        "_folded": "false",
+        "identity": 691686422
+      }
+    },
+    {
+      "label": "open-landscape",
+      "time": "2026-10-09T06:46:20.628898+00:00",
+      "pid": 17731,
+      "isolate": "isolates/3449566441726671",
+      "window": {
+        "regularWidth": "true",
+        "phone": "true",
+        "nativeFoldApi": "true",
+        "size": {
+          "_dx": "951.0",
+          "_dy": "669.0"
+        },
+        "edge": "trailing",
+        "regions": [
+          {
+            "bounds": {
+              "left": "455.5",
+              "top": "0.0",
+              "right": "495.5",
+              "bottom": "669.0"
+            },
+            "type": {
+              "index": "1",
+              "_name": "fold"
+            },
+            "state": {
+              "index": "1",
+              "_name": "postureFlat"
+            }
+          },
+          {
+            "bounds": {
+              "left": "867.0",
+              "top": "0.0",
+              "right": "951.0",
+              "bottom": "120.0"
+            },
+            "type": {
+              "index": "3",
+              "_name": "cutout"
+            },
+            "state": {
+              "index": "0",
+              "_name": "unknown"
+            }
+          }
+        ]
+      },
+      "players": [
+        {
+          "controllerIdentity": 3129937639,
+          "decoderIdentity": 633589293,
+          "textureControllerIdentity": 436766550,
+          "position": "467",
+          "duration": "1358"
+        }
+      ],
+      "stage": {
+        "_selected": "评论",
+        "_open": "true",
+        "_inline": "false",
+        "_folded": "false",
+        "identity": 691686422
+      }
+    },
+    {
+      "label": "closed",
+      "time": "2026-10-09T06:47:00.660794+00:00",
+      "pid": 17731,
+      "isolate": "isolates/3449566441726671",
+      "window": {
+        "regularWidth": "false",
+        "phone": "true",
+        "nativeFoldApi": "true",
+        "size": {
+          "_dx": "678.0",
+          "_dy": "466.0"
+        },
+        "edge": "leading",
+        "regions": [
+          {
+            "bounds": {
+              "left": "29.333333333333332",
+              "top": "29.333333333333314",
+              "right": "66.33333333333333",
+              "bottom": "66.33333333333331"
+            },
+            "type": {
+              "index": "3",
+              "_name": "cutout"
+            },
+            "state": {
+              "index": "0",
+              "_name": "unknown"
+            }
+          },
+          {
+            "bounds": {
+              "left": "0.0",
+              "top": "0.0",
+              "right": "170.0",
+              "bottom": "84.0"
+            },
+            "type": {
+              "index": "3",
+              "_name": "cutout"
+            },
+            "state": {
+              "index": "0",
+              "_name": "unknown"
+            }
+          }
+        ]
+      },
+      "players": [
+        {
+          "controllerIdentity": 3129937639,
+          "decoderIdentity": 633589293,
+          "textureControllerIdentity": 436766550,
+          "position": "507",
+          "duration": "1358"
+        }
+      ],
+      "stage": {
+        "_selected": "评论",
+        "_open": "true",
+        "_inline": "true",
+        "_folded": "false",
+        "identity": 691686422
+      }
+    },
+    {
+      "label": "closed-portrait",
+      "time": "2026-10-09T06:47:21.703120+00:00",
+      "pid": 17731,
+      "isolate": "isolates/3449566441726671",
+      "window": {
+        "regularWidth": "false",
+        "phone": "true",
+        "nativeFoldApi": "true",
+        "size": {
+          "_dx": "466.0",
+          "_dy": "678.0"
+        },
+        "edge": "trailing",
+        "regions": [
+          {
+            "bounds": {
+              "left": "399.6666666666667",
+              "top": "29.333333333333332",
+              "right": "436.6666666666667",
+              "bottom": "66.33333333333333"
+            },
+            "type": {
+              "index": "3",
+              "_name": "cutout"
+            },
+            "state": {
+              "index": "0",
+              "_name": "unknown"
+            }
+          },
+          {
+            "bounds": {
+              "left": "382.0",
+              "top": "0.0",
+              "right": "466.0",
+              "bottom": "170.0"
+            },
+            "type": {
+              "index": "3",
+              "_name": "cutout"
+            },
+            "state": {
+              "index": "0",
+              "_name": "unknown"
+            }
+          }
+        ]
+      },
+      "players": [
+        {
+          "controllerIdentity": 3129937639,
+          "decoderIdentity": 633589293,
+          "textureControllerIdentity": 436766550,
+          "position": "528",
+          "duration": "1358"
+        }
+      ],
+      "stage": {
+        "_selected": "评论",
+        "_open": "true",
+        "_inline": "true",
+        "_folded": "false",
+        "identity": 691686422
+      }
+    },
+    {
+      "label": "image-open",
+      "time": "2026-10-09T06:47:39.773624+00:00",
+      "pid": 17731,
+      "isolate": "isolates/3449566441726671",
+      "window": {
+        "regularWidth": "false",
+        "phone": "true",
+        "nativeFoldApi": "true",
+        "size": {
+          "_dx": "466.0",
+          "_dy": "678.0"
+        },
+        "edge": "trailing",
+        "regions": [
+          {
+            "bounds": {
+              "left": "399.6666666666667",
+              "top": "29.333333333333332",
+              "right": "436.6666666666667",
+              "bottom": "66.33333333333333"
+            },
+            "type": {
+              "index": "3",
+              "_name": "cutout"
+            },
+            "state": {
+              "index": "0",
+              "_name": "unknown"
+            }
+          },
+          {
+            "bounds": {
+              "left": "382.0",
+              "top": "0.0",
+              "right": "466.0",
+              "bottom": "170.0"
+            },
+            "type": {
+              "index": "3",
+              "_name": "cutout"
+            },
+            "state": {
+              "index": "0",
+              "_name": "unknown"
+            }
+          }
+        ]
+      },
+      "players": [
+        {
+          "controllerIdentity": 3129937639,
+          "decoderIdentity": 633589293,
+          "textureControllerIdentity": 436766550,
+          "position": "546",
+          "duration": "1358"
+        }
+      ],
+      "stage": {
+        "_selected": "评论",
+        "_open": "true",
+        "_inline": "true",
+        "_folded": "false",
+        "identity": 691686422
+      }
+    }
+  ],
+  "remaining": [
+    "Physical Duo power and frame timing",
+    "Real system Split View",
+    "Final packaged release on physical hardware",
+    "Image-close interaction was not completed in this simulator session",
+    "Tent: focused geometry and widget checks only; actual tent hardware/display pose pending"
+  ],
+  "unifiedVersion": "1.2.0+25"
+}

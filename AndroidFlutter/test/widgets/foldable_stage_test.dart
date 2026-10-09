@@ -11,6 +11,70 @@ import 'package:material_ui/material_ui.dart';
 
 void main() {
   testWidgets(
+    'tent watching maximizes outer video and retains content on exit',
+    (tester) async {
+      const size = Size(678, 466);
+      var hinge = NewbiliHingeState.partiallyOpen;
+      late StateSetter update;
+      final player = GlobalKey();
+      await tester.binding.setSurfaceSize(size);
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: StatefulBuilder(
+            builder: (context, setState) {
+              update = setState;
+              return NewbiliWindowScope(
+                info: NewbiliWindowInfo(
+                  size: size,
+                  phone: true,
+                  controlEdge: NewbiliControlEdge.leading,
+                  hingeState: hinge,
+                ),
+                child: MediaQuery(
+                  data: MediaQuery.of(context).copyWith(size: size),
+                  child: TabletPlayerStage(
+                    adaptToFoldable: true,
+                    compact: true,
+                    selectedPane: '评论',
+                    onBack: () {},
+                    onHome: () {},
+                    playerBuilder: (_, _) => StatefulBuilder(
+                      key: player,
+                      builder: (_, _) => const Text('持续的视频'),
+                    ),
+                    details: const Text('简介'),
+                    secondary: const Center(child: Text('帐篷评论')),
+                    onSendDanmaku: () {},
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final state = player.currentState;
+      final video = tester.getRect(find.byKey(player));
+      expect(video.size, const Size(606, 466));
+      expect(find.text('帐篷评论').hitTestable(), findsNothing);
+      await tester.tap(
+        find.descendant(
+          of: find.byType(NewbiliEdgeSurface),
+          matching: find.byTooltip('打开简介、评论与动态'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('帐篷评论').hitTestable(), findsOneWidget);
+      expect(tester.getRect(find.byKey(player)), video);
+      update(() => hinge = NewbiliHingeState.closed);
+      await tester.pumpAndSettle();
+      expect(player.currentState, same(state));
+      expect(find.text('帐篷评论').hitTestable(), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+  testWidgets(
     'Duo uses one edge column and fills book/tabletop regions without replacing playback',
     (tester) async {
       var size = const Size(951, 669);

@@ -3,7 +3,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
-enum NewbiliPlayerArrangement { auto, sideBySide, tabletop }
+enum NewbiliPlayerArrangement { auto, sideBySide, tabletop, tent }
 
 /// Uses live window geometry, including separating hinges and half-open folds.
 class NewbiliFoldLayout {
@@ -14,12 +14,14 @@ class NewbiliFoldLayout {
     required this.folded,
     this.compact = false,
     this.tabletop = false,
+    this.tent = false,
     this.transport = Rect.zero,
   });
   final Rect player, content, ball;
   final bool folded;
   final bool compact;
   final bool tabletop;
+  final bool tent;
   final Rect transport;
 
   static DisplayFeature? separatingFeature(
@@ -67,6 +69,8 @@ class NewbiliFoldLayout {
     var bookTransport = Rect.zero;
     final horizontalFold =
         feature != null && feature.bounds.width >= size.width * .75;
+    final tent =
+        arrangement == NewbiliPlayerArrangement.tent && feature == null;
     final tabletop =
         horizontalFold ||
         arrangement == NewbiliPlayerArrangement.tabletop &&
@@ -74,11 +78,21 @@ class NewbiliFoldLayout {
             size.height >= 360;
     final inline =
         !tabletop &&
+        !tent &&
         feature == null &&
         compact &&
         (arrangement != NewbiliPlayerArrangement.sideBySide ||
             size.width < 600);
-    if (feature != null && !horizontalFold) {
+    if (tent) {
+      player = Offset.zero & size;
+      final extent = math.min(
+        size.width * .55,
+        math.max(280.0, size.width * .4),
+      );
+      // Content appears as an optional overlay; opening it does not shrink or
+      // replace the video. Outer-display viewing has no inner hinge to invent.
+      pane = Rect.fromLTWH(size.width - extent, 0, extent, size.height);
+    } else if (feature != null && !horizontalFold) {
       final ratio = videoAspectRatio.isFinite && videoAspectRatio > 0
           ? videoAspectRatio
           : 16 / 9;
@@ -161,6 +175,7 @@ class NewbiliFoldLayout {
       folded: feature != null,
       compact: inline,
       tabletop: tabletop,
+      tent: tent,
       transport: !bookTransport.isEmpty
           ? bookTransport
           : Rect.fromLTWH(

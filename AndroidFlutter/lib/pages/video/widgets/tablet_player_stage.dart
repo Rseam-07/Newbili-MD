@@ -76,6 +76,8 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
   bool _inline = false;
   Size _lastSize = const Size(320, 600);
   bool _folded = false;
+  bool _tent = false;
+  bool _openBeforeTent = true;
 
   List<String> get _names => [
     '简介',
@@ -292,10 +294,30 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
                 compact:
                     widget.compact ||
                     widget.adaptToFoldable && size.height > size.width,
-                arrangement: _arrangement,
+                arrangement:
+                    _arrangement == NewbiliPlayerArrangement.auto &&
+                        NewbiliWindowScope.of(context)
+                            .tentWatching(MediaQuery.sizeOf(context))
+                    ? NewbiliPlayerArrangement.tent
+                    : _arrangement,
                 videoAspectRatio: widget.videoAspectRatio,
                 hasTransport: widget.transport != null,
               );
+              if (layout.tent != _tent) {
+                if (layout.tent) {
+                  _openBeforeTent = _open;
+                  _open = false;
+                } else {
+                  _open = _openBeforeTent;
+                }
+                _tent = layout.tent;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (!mounted) return;
+                  setState(() {});
+                  widget.onOpenChanged?.call(_open);
+                  _animateExpansion();
+                });
+              }
               // A newly active fold gives the secondary region useful content.
               // Keep the same tabs/scroll/player; collapsing it stays an explicit choice.
               if ((layout.folded && !_folded || layout.compact) && !_open) {
@@ -526,6 +548,7 @@ class _TabletPlayerStageState extends State<TabletPlayerStage>
               '并排观看',
             ),
             (NewbiliPlayerArrangement.tabletop, '桌面观看'),
+            (NewbiliPlayerArrangement.tent, '帐篷观看'),
           ])
             CheckedPopupMenuItem(
               value: value,

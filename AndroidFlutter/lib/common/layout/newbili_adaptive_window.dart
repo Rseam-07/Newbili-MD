@@ -8,6 +8,8 @@ import 'package:flutter/widgets.dart';
 
 enum NewbiliControlEdge { bottom, leading, trailing }
 
+enum NewbiliHingeState { unknown, closed, partiallyOpen, fullyOpen }
+
 /// Scene-local UIKit geometry. Points are converted against the current Flutter
 /// viewport; no device names, screen resolutions or guessed hinge positions.
 @immutable
@@ -19,6 +21,7 @@ class NewbiliWindowInfo {
     this.controlEdge = NewbiliControlEdge.bottom,
     this.features = const [],
     this.nativeFoldApi = false,
+    this.hingeState = NewbiliHingeState.unknown,
   });
 
   final Size size;
@@ -27,6 +30,19 @@ class NewbiliWindowInfo {
   final NewbiliControlEdge controlEdge;
   final List<DisplayFeature> features;
   final bool nativeFoldApi;
+  final NewbiliHingeState hingeState;
+
+  // Apple describes tent viewing on the landscape outer display. No angle
+  // threshold, device name or orientation lock is needed. Missing signals
+  // leave automatic layout alone; manual tent viewing remains available.
+  bool tentWatching(Size viewport) =>
+      !size.isEmpty &&
+      (size.width - viewport.width).abs() <= 2 &&
+      (size.height - viewport.height).abs() <= 2 &&
+      hingeState == NewbiliHingeState.partiallyOpen &&
+      !regularWidth &&
+      controlEdge != NewbiliControlEdge.bottom &&
+      viewport.width > viewport.height;
 
   factory NewbiliWindowInfo.fromMap(Map<Object?, Object?> data) {
     double number(Object? value) =>
@@ -60,6 +76,12 @@ class NewbiliWindowInfo {
       regularWidth: data['regularWidth'] == true,
       phone: data['phone'] == true,
       nativeFoldApi: data['nativeFoldApi'] == true,
+      hingeState: switch (data['hingeState']) {
+        'closed' => NewbiliHingeState.closed,
+        'partiallyOpen' => NewbiliHingeState.partiallyOpen,
+        'fullyOpen' => NewbiliHingeState.fullyOpen,
+        _ => NewbiliHingeState.unknown,
+      },
       controlEdge: switch (data['controlEdge']) {
         'leading' => NewbiliControlEdge.leading,
         'trailing' => NewbiliControlEdge.trailing,
